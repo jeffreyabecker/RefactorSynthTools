@@ -57,7 +57,7 @@ namespace Synthesis
         float _w[2];
 
     public:
-        static void InitSine(const WaveForms::WaveForm *&sine)
+        static void InitSine(const WaveForms::WaveForm *sine)
         {
             _sine = sine;
         }

@@ -45,10 +45,9 @@
 
 #include <stdint.h>
 #include "SampleBuffer.h"
-#define i32_abs(x) ((x)>0?(x):-(x))
+#define i32_abs(x) ((x) > 0 ? (x) : -(x))
 namespace Synthesis
 {
-    
 
     class PitchShifter
     {
@@ -74,37 +73,36 @@ namespace Synthesis
          */
 
     public:
-        PitchShifter(SampleBuffer &buffer, float sample_rate):
-        _buffer(buffer),
-        _sample_rate(sample_rate),
-        _depth(1.0f),
-        _speed(1),
-        _wetV(1.0f),
-        _dryV(0.0f),
-        _feedback(0.125f)
+        PitchShifter(SampleBuffer &buffer, float sample_rate) : _buffer(buffer),
+                                                                _sample_rate(sample_rate),
+                                                                _depth(1.0f),
+                                                                _speed(1),
+                                                                _wetV(1.0f),
+                                                                _dryV(0.0f),
+                                                                _feedback(0.125f)
         {
-            
+
             inCnt = 0;
             outCnt = 0;
-            
         }
 
         uint32_t minDistance(int32_t pointerA, int32_t pointerB)
         {
             uint32_t distance1 = i32_abs(pointerA - pointerB);
-            uint32_t distance2 = PITCH_SHIFTER_BUFFER_SIZE - distance1;
+            uint32_t distance2 = _buffer.length() - distance1;
             return (distance1 < distance2) ? distance1 : distance2;
         }
 
         void Process(const float *in, float *out, uint32_t count)
         {
+            auto bufferLength = _buffer.length();
 
             for (uint32_t n = 0; n < count; n++)
             {
-                float outCnt2 = outCnt + (PITCH_SHIFTER_BUFFER_SIZE / 2);
-                if (outCnt2 >= PITCH_SHIFTER_BUFFER_SIZE)
+                float outCnt2 = outCnt + (_buffer.length() / 2);
+                if (outCnt2 >= bufferLength)
                 {
-                    outCnt2 -= PITCH_SHIFTER_BUFFER_SIZE;
+                    outCnt2 -= bufferLength;
                 }
 
                 _buffer[inCnt] = in[n];
@@ -112,27 +110,27 @@ namespace Synthesis
                 uint32_t outU2 = floor(outCnt2);
                 uint32_t diffU = minDistance(inCnt, outU);
                 float diff = diffU;
-                diff *= 1.0f / (PITCH_SHIFTER_BUFFER_SIZE / 2);
+                diff *= 1.0f / (bufferLength / 2);
                 float diffI = 1.0f - diff;
                 out[n] = (diff * _buffer[outU] + diffI * _buffer[outU2]) * _wetV + in[n] * _dryV;
 
                 _buffer[inCnt] += _feedback * out[n];
 
                 inCnt++;
-                if (inCnt >= PITCH_SHIFTER_BUFFER_SIZE)
+                if (inCnt >= bufferLength)
                 {
-                    inCnt -= PITCH_SHIFTER_BUFFER_SIZE;
+                    inCnt -= bufferLength;
                 }
 
                 outCnt += _speed;
                 outCnt++;
-                if (outCnt >= PITCH_SHIFTER_BUFFER_SIZE)
+                if (outCnt >= bufferLength)
                 {
-                    outCnt -= PITCH_SHIFTER_BUFFER_SIZE;
+                    outCnt -= bufferLength;
                 }
                 if (outCnt < 0)
                 {
-                    outCnt += PITCH_SHIFTER_BUFFER_SIZE;
+                    outCnt += bufferLength;
                 }
             }
         }
