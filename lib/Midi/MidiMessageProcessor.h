@@ -13,25 +13,25 @@ namespace Midi
     {
     protected:
         bool _isConnected = false;
-        virtual void HandleNoteOff(MidiMessage msg) {}
-        virtual void HandleNoteOn(MidiMessage msg) {}
-        virtual void HandlePolyphonicKeyPressure(MidiMessage msg) {}
-        virtual void HandleControlChange(MidiMessage msg) {}
-        virtual void HandleProgramChange(MidiMessage msg) {}
-        virtual void HandleChannelPressure(MidiMessage msg) {}
-        virtual void HandlePitchBendChange(MidiMessage msg) {}
-        virtual void HandleSystemExclusive(MidiMessage msg) {}
-        virtual void HandleTimeCodeQuarterFrame(MidiMessage msg) {}
-        virtual void HandleSongPositionPointer(MidiMessage msg) {}
-        virtual void HandleSongSelect(MidiMessage msg) {}
-        virtual void HandleTuneRequest(MidiMessage msg) {}
-        virtual void HandleEndofExclusive(MidiMessage msg) {}
-        virtual void HandleTimingClock(MidiMessage msg) {}
-        virtual void HandleStart(MidiMessage msg) {}
-        virtual void HandleContinue(MidiMessage msg) {}
-        virtual void HandleStop(MidiMessage msg) {}
-        virtual void HandleActiveSensing(MidiMessage msg) {}
-        virtual void HandleReset(MidiMessage msg) {}
+        virtual void HandleNoteOff(Messages::NoteOff &msg) {}
+        virtual void HandleNoteOn(Messages::NoteOn &msg) {}
+        virtual void HandlePolyphonicKeyPressure(Messages::PolyphonicKeyPressure &msg) {}
+        virtual void HandleControlChange(Messages::ControlChange &msg) {}
+        virtual void HandleProgramChange(Messages::ProgramChange &msg) {}
+        virtual void HandleChannelPressure(Messages::ChannelPressure &msg) {}
+        virtual void HandlePitchBendChange(Messages::PitchBendChange &msg) {}
+
+        virtual void HandleTimeCodeQuarterFrame(Messages::TimeCodeQuarterFrame &msg) {}
+        virtual void HandleSongPositionPointer(Messages::SongPositionPointer &msg) {}
+        virtual void HandleSongSelect(Messages::SongSelect &msg) {}
+        virtual void HandleTuneRequest(Messages::TuneRequest &msg) {}
+        virtual void HandleEndofExclusive(Messages::EndofExclusive &msg) {}
+        virtual void HandleTimingClock(Messages::TimingClock &msg) {}
+        virtual void HandleStart(Messages::Start &msg) {}
+        virtual void HandleContinue(Messages::Continue &msg) {}
+        virtual void HandleStop(Messages::Stop &msg) {}
+        virtual void HandleActiveSensing(Messages::ActiveSensing &msg) {}
+        virtual void HandleReset(Messages::Reset &msg) {}
 
     public:
         MidiMessageProcessor() : _isConnected(false) {}
@@ -43,63 +43,60 @@ namespace Midi
                 switch (status)
                 {
                 case MidiMessageStatus::NoteOff:
-                    HandleNoteOff(message);
+                    HandleNoteOff(static_cast<Messages::NoteOff &>(message));
                     break;
                 case MidiMessageStatus::NoteOn:
-                    HandleNoteOn(message);
+                    HandleNoteOn(static_cast<Messages::NoteOn &>(message));
                     break;
                 case MidiMessageStatus::PolyphonicKeyPressure:
-                    HandlePolyphonicKeyPressure(message);
+                    HandlePolyphonicKeyPressure(static_cast<Messages::PolyphonicKeyPressure &>(message));
                     break;
                 case MidiMessageStatus::ControlChange:
-                    HandleControlChange(message);
+                    HandleControlChange(static_cast<Messages::ControlChange &>(message));
                     break;
                 case MidiMessageStatus::ProgramChange:
-                    HandleProgramChange(message);
+                    HandleProgramChange(static_cast<Messages::ProgramChange &>(message));
                     break;
                 case MidiMessageStatus::ChannelPressure:
-                    HandleChannelPressure(message);
+                    HandleChannelPressure(static_cast<Messages::ChannelPressure &>(message));
                     break;
                 case MidiMessageStatus::PitchBendChange:
-                    HandlePitchBendChange(message);
-                    break;
-                case MidiMessageStatus::SystemExclusive:
-                    HandleSystemExclusive(message);
-                    break;
-                case MidiMessageStatus::TimeCodeQuarterFrame:
-                    HandleTimeCodeQuarterFrame(message);
-                    break;
-                case MidiMessageStatus::SongPositionPointer:
-                    HandleSongPositionPointer(message);
-                    break;
-                case MidiMessageStatus::SongSelect:
-                    HandleSongSelect(message);
-                    break;
-                case MidiMessageStatus::TuneRequest:
-                    HandleTuneRequest(message);
-                    break;
-                case MidiMessageStatus::EndofExclusive:
-                    HandleEndofExclusive(message);
-                    break;
-                case MidiMessageStatus::TimingClock:
-                    HandleTimingClock(message);
-                    break;
-                case MidiMessageStatus::Start:
-                    HandleStart(message);
-                    break;
-                case MidiMessageStatus::Continue:
-                    HandleContinue(message);
-                    break;
-                case MidiMessageStatus::Stop:
-                    HandleStop(message);
-                    break;
-                case MidiMessageStatus::ActiveSensing:
-                    HandleActiveSensing(message);
-                    break;
-                case MidiMessageStatus::Reset:
-                    HandleReset(message);
+                    HandlePitchBendChange(static_cast<Messages::PitchBendChange &>(message));
                     break;
 
+                case MidiMessageStatus::TimeCodeQuarterFrame:
+                    HandleTimeCodeQuarterFrame(static_cast<Messages::TimeCodeQuarterFrame &>(message));
+                    break;
+                case MidiMessageStatus::SongPositionPointer:
+                    HandleSongPositionPointer(static_cast<Messages::SongPositionPointer &>(message));
+                    break;
+                case MidiMessageStatus::SongSelect:
+                    HandleSongSelect(static_cast<Messages::SongSelect &>(message));
+                    break;
+                case MidiMessageStatus::TuneRequest:
+                    HandleTuneRequest(static_cast<Messages::TuneRequest &>(message));
+                    break;
+                case MidiMessageStatus::EndofExclusive:
+                    HandleEndofExclusive(static_cast<Messages::EndofExclusive &>(message));
+                    break;
+                case MidiMessageStatus::TimingClock:
+                    HandleTimingClock(static_cast<Messages::TimingClock &>(message));
+                    break;
+                case MidiMessageStatus::Start:
+                    HandleStart(static_cast<Messages::Start &>(message));
+                    break;
+                case MidiMessageStatus::Continue:
+                    HandleContinue(static_cast<Messages::Continue &>(message));
+                    break;
+                case MidiMessageStatus::Stop:
+                    HandleStop(static_cast<Messages::Stop &>(message));
+                    break;
+                case MidiMessageStatus::ActiveSensing:
+                    HandleActiveSensing(static_cast<Messages::ActiveSensing &>(message));
+                    break;
+                case MidiMessageStatus::Reset:
+                    HandleReset(static_cast<Messages::Reset &>(message));
+                    break;
                 default:
                     break;
                 }

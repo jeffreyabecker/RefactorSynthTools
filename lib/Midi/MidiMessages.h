@@ -69,181 +69,165 @@ namespace Midi
     }
   };
 
-  class MidiChannelMessage : public MidiMessage
+  namespace Messages
   {
-  public:
-    MidiChannelMessage(const MidiChannelMessage &that) : MidiMessage(that) {}
-    inline uint8_t channel() { return (uint8_t)(_status) & 0x0F; }
-
-  protected:
-    MidiChannelMessage(MidiMessageStatus status, uint8_t channel, uint8_t arg1, uint8_t arg2) : MidiMessage(2, (MidiMessageStatus)((((uint8_t)status) & 0xF0) | (channel & 0x0F)), arg1, arg2) {}
-    MidiChannelMessage(MidiMessageStatus status, uint8_t channel, uint8_t arg1) : MidiMessage(1, (MidiMessageStatus)((((uint8_t)status) & 0xF0) | (channel & 0x0F)), arg1, 0x00) {}
-  };
-  class MidiChannelNoteMessage : public MidiChannelMessage
-  {
-  public:
-    MidiChannelNoteMessage(MidiMessageStatus status, uint8_t channel, MidiNote note, uint8_t velocity) : MidiChannelMessage(status, channel, (uint8_t)note, velocity) {}
-    MidiChannelNoteMessage(const MidiChannelNoteMessage &that) : MidiChannelMessage(that) {}
-    inline MidiNote note() { return MidiNote(_arg1); }
-    inline uint8_t velocity() { return _arg2; }
-  };
-
-  class ActiveSensingMessage : public MidiMessage
-  {
-  public:
-    ActiveSensingMessage() : MidiMessage(0, MidiMessageStatus::ActiveSensing, 0x00, 0x00) {}
-    ActiveSensingMessage(const ActiveSensingMessage &that) : MidiMessage(that) {}
-  };
-
-  class ChannelPressureMessage : public MidiChannelMessage
-  {
-  public:
-    ChannelPressureMessage(uint8_t channel, uint8_t pressure) : MidiChannelMessage(MidiMessageStatus::ChannelPressure, channel, pressure) {}
-    ChannelPressureMessage(const ChannelPressureMessage &that) : MidiChannelMessage(that) {}
-    inline uint8_t pressure() { return _arg2; }
-  };
-  class ContinueMessage : public MidiMessage
-  {
-  public:
-    ContinueMessage() : MidiMessage(0, MidiMessageStatus::Continue, 0x00, 0x00) {}
-    ContinueMessage(const ContinueMessage &that) : MidiMessage(that) {}
-  };
-  class ControlChangeMessage : public MidiChannelMessage
-  {
-  public:
-    ControlChangeMessage(uint8_t channel, uint8_t controlNumber, uint8_t value) : MidiChannelMessage(MidiMessageStatus::ControlChange, channel, controlNumber, value) {}
-    ControlChangeMessage(const ControlChangeMessage &that) : MidiChannelMessage(that) {}
-    inline uint8_t control() { return (uint8_t)(_arg1); }
-    inline uint8_t velocity() { return _arg2; }
-  };
-
-  class EndofExclusiveMessage : public MidiMessage
-  {
-  public:
-    EndofExclusiveMessage() : MidiMessage(0, MidiMessageStatus::EndofExclusive, 0x00, 0x00) {}
-    EndofExclusiveMessage(const EndofExclusiveMessage &that) : MidiMessage(that) {}
-  };
-  class NoteOffMessage : public MidiChannelNoteMessage
-  {
-  public:
-    NoteOffMessage(uint8_t channel, MidiNote note, uint8_t velocity) : MidiChannelNoteMessage(MidiMessageStatus::NoteOff, channel, note, velocity) {}
-    NoteOffMessage(const NoteOffMessage &that) : MidiChannelNoteMessage(that) {}
-  };
-  class NoteOnMessage : public MidiChannelNoteMessage
-  {
-  public:
-    NoteOnMessage(uint8_t channel, MidiNote note, uint8_t velocity) : MidiChannelNoteMessage(MidiMessageStatus::NoteOn, channel, note, velocity) {}
-    NoteOnMessage(const NoteOnMessage &that) : MidiChannelNoteMessage(that) {}
-  };
-  class PitchBendChangeMessage : public MidiChannelMessage
-  {
-  public:
-    PitchBendChangeMessage(uint8_t channel, int16_t value)
-        : MidiChannelMessage(
-              MidiMessageStatus::PitchBendChange,
-              channel,
-              ((value + 0x2000)),       // low 7 bits
-              (((value + 0x2000) >> 7)) // high 7 bits
-          )
+    class MidiChannelMessage : public MidiMessage
     {
-    }
-    PitchBendChangeMessage(const PitchBendChangeMessage &that) : MidiChannelMessage(that) {}
+    public:
+      MidiChannelMessage(const MidiChannelMessage &that) : MidiMessage(that) {}
+      inline uint8_t channel() { return (uint8_t)(_status) & 0x0F; }
 
-    inline int16_t value() { return (int16_t)_arg1 + (((int16_t)_arg1) << 7) - 0x2000; }
-  };
-  class PolyphonicKeyPressureMessage : public MidiChannelNoteMessage
-  {
-  public:
-    PolyphonicKeyPressureMessage(uint8_t channel, MidiNote note, uint8_t velocity) : MidiChannelNoteMessage(MidiMessageStatus::PolyphonicKeyPressure, channel, note, velocity) {}
-    PolyphonicKeyPressureMessage(const PolyphonicKeyPressureMessage &that) : MidiChannelNoteMessage(that) {}
-  };
-  class ProgramChangeMessage : public MidiChannelMessage
-  {
-  public:
-    ProgramChangeMessage(uint8_t channel, uint8_t programNumber) : MidiChannelMessage(MidiMessageStatus::ProgramChange, channel, programNumber) {}
-    ProgramChangeMessage(const ProgramChangeMessage &that) : MidiChannelMessage(that) {}
-    inline uint8_t programNumber() { return _arg2; }
-  };
-  class ResetMessage : public MidiMessage
-  {
-  public:
-    ResetMessage() : MidiMessage(0, MidiMessageStatus::Reset, 0x00, 0x00) {}
-    ResetMessage(const ResetMessage &that) : MidiMessage(that) {}
-  };
-  class SongPositionPointerMessage : public MidiMessage
-  {
-  public:
-    SongPositionPointerMessage(uint16_t beats) : MidiMessage(2, MidiMessageStatus::SongPositionPointer, beats & 0x7F, (beats >> 7) & 0x7F) {}
-    SongPositionPointerMessage(const SongPositionPointerMessage &that) : MidiMessage(that) {}
-    inline uint16_t beats() { return ((uint16_t)((_arg2 & 0x7F) << 7)) + ((uint16_t)(_arg1 & 0x7F)); }
-  };
+    protected:
+      MidiChannelMessage(MidiMessageStatus status, uint8_t channel, uint8_t arg1, uint8_t arg2) : MidiMessage(2, (MidiMessageStatus)((((uint8_t)status) & 0xF0) | (channel & 0x0F)), arg1, arg2) {}
+      MidiChannelMessage(MidiMessageStatus status, uint8_t channel, uint8_t arg1) : MidiMessage(1, (MidiMessageStatus)((((uint8_t)status) & 0xF0) | (channel & 0x0F)), arg1, 0x00) {}
+    };
+    class MidiChannelNoteMessage : public MidiChannelMessage
+    {
+    public:
+      MidiChannelNoteMessage(MidiMessageStatus status, uint8_t channel, MidiNote note, uint8_t velocity) : MidiChannelMessage(status, channel, (uint8_t)note, velocity) {}
+      MidiChannelNoteMessage(const MidiChannelNoteMessage &that) : MidiChannelMessage(that) {}
+      inline MidiNote note() { return MidiNote(_arg1); }
+      inline uint8_t velocity() { return _arg2; }
+    };
+    class NoteOff : public MidiChannelNoteMessage
+    {
+    public:
+      NoteOff(uint8_t channel, MidiNote note, uint8_t velocity) : MidiChannelNoteMessage(MidiMessageStatus::NoteOff, channel, note, velocity) {}
+      NoteOff(const NoteOff &that) : MidiChannelNoteMessage(that) {}
+    };
+    class NoteOn : public MidiChannelNoteMessage
+    {
+    public:
+      NoteOn(uint8_t channel, MidiNote note, uint8_t velocity) : MidiChannelNoteMessage(MidiMessageStatus::NoteOn, channel, note, velocity) {}
+      NoteOn(const NoteOn &that) : MidiChannelNoteMessage(that) {}
+    };
 
-  class SongSelectMessage : public MidiMessage
-  {
-  public:
-    SongSelectMessage(uint8_t songNumber) : MidiMessage(1, MidiMessageStatus::SongSelect, songNumber, 0x00) {}
-    SongSelectMessage(const SongSelectMessage &that) : MidiMessage(that) {}
-    inline uint8_t songNumber() { return _arg1; }
-  };
-  class StartMessage : public MidiMessage
-  {
-  public:
-    StartMessage() : MidiMessage(0, MidiMessageStatus::Start, 0x00, 0x00) {}
-    StartMessage(const StartMessage &that) : MidiMessage(that) {}
-  };
-  class StopMessage : public MidiMessage
-  {
-  public:
-    StopMessage() : MidiMessage(0, MidiMessageStatus::Stop, 0x00, 0x00) {}
-    StopMessage(const StopMessage &that) : MidiMessage(that) {}
-  };
-  class TimeCodeQuarterFrameMessage : public MidiMessage
-  {
-  public:
-    TimeCodeQuarterFrameMessage(uint8_t messageType, uint8_t values) : MidiMessage(1, MidiMessageStatus::TimeCodeQuarterFrame, ((messageType << 4) & 0x70) | (values & 0x0F), 0x00) {}
-    TimeCodeQuarterFrameMessage(const TimeCodeQuarterFrameMessage &that) : MidiMessage(that) {}
 
-    inline uint8_t messageType() { return _arg1 & 0x70 >> 4; }
-    inline uint8_t values() { return _arg1 & 0x0F; }
-  };
-  class TimingClockMessage : public MidiMessage
-  {
-  public:
-    TimingClockMessage() : MidiMessage(0, MidiMessageStatus::TimingClock, 0x00, 0x00) {}
-    TimingClockMessage(const TimingClockMessage &that) : MidiMessage(that) {}
-  };
+    class PolyphonicKeyPressure : public MidiChannelNoteMessage
+    {
+    public:
+      PolyphonicKeyPressure(uint8_t channel, MidiNote note, uint8_t velocity) : MidiChannelNoteMessage(MidiMessageStatus::PolyphonicKeyPressure, channel, note, velocity) {}
+      PolyphonicKeyPressure(const PolyphonicKeyPressure &that) : MidiChannelNoteMessage(that) {}
+    };
+    class ControlChange : public MidiChannelMessage
+    {
+    public:
+      ControlChange(uint8_t channel, uint8_t controlNumber, uint8_t value) : MidiChannelMessage(MidiMessageStatus::ControlChange, channel, controlNumber, value) {}
+      ControlChange(const ControlChange &that) : MidiChannelMessage(that) {}
+      inline uint8_t control() { return (uint8_t)(_arg1); }
+      inline uint8_t velocity() { return _arg2; }
+    };
 
-  class TuneRequestMessage : public MidiMessage
-  {
-  public:
-    TuneRequestMessage() : MidiMessage(0, MidiMessageStatus::TuneRequest, 0x00, 0x00) {}
-    TuneRequestMessage(const TuneRequestMessage &that) : MidiMessage(that) {}
-  };
+    class ChannelPressure : public MidiChannelMessage
+    {
+    public:
+      ChannelPressure(uint8_t channel, uint8_t pressure) : MidiChannelMessage(MidiMessageStatus::ChannelPressure, channel, pressure) {}
+      ChannelPressure(const ChannelPressure &that) : MidiChannelMessage(that) {}
+      inline uint8_t pressure() { return _arg2; }
+    };
 
-  class MidiMessages
-  {
-  public:
-    static inline NoteOffMessage NoteOff(uint8_t channel, MidiNote note, uint8_t velocity) { return NoteOffMessage(channel, note, velocity); }
-    static inline NoteOnMessage NoteOn(uint8_t channel, MidiNote note, uint8_t velocity) { return NoteOnMessage(channel, note, velocity); }
-    static inline PolyphonicKeyPressureMessage PolyphonicKeyPressure(uint8_t channel, MidiNote note, uint8_t velocity) { return PolyphonicKeyPressureMessage(channel, note, velocity); }
+    class ActiveSensing : public MidiMessage
+    {
+    public:
+      ActiveSensing() : MidiMessage(0, MidiMessageStatus::ActiveSensing, 0x00, 0x00) {}
+      ActiveSensing(const ActiveSensing &that) : MidiMessage(that) {}
+    };
 
-    static inline ControlChangeMessage ControlChange(uint8_t channel, uint8_t controlNumber, uint8_t value) { return ControlChangeMessage(channel, controlNumber, value); }
-    static inline ProgramChangeMessage ProgramChange(uint8_t channel, uint8_t programNumber) { return ProgramChangeMessage(channel, programNumber); }
-    static inline ChannelPressureMessage ChannelPressure(uint8_t channel, uint8_t pressure) { return ChannelPressureMessage(channel, pressure); }
-    static inline PitchBendChangeMessage PitchBendChange(uint8_t channel, int16_t value) { return PitchBendChangeMessage(channel, value); }
-    static inline TimeCodeQuarterFrameMessage TimeCodeQuarterFrame(uint8_t messageType, uint8_t values) { return TimeCodeQuarterFrameMessage(messageType, values); }
-    static inline SongPositionPointerMessage SongPositionPointer(uint16_t beats) { return SongPositionPointerMessage(beats); }
-    static inline SongSelectMessage SongSelect(uint8_t songNumber) { return SongSelectMessage(songNumber); }
 
-    static const TuneRequestMessage TuneRequest();
-    static const EndofExclusiveMessage EndofExclusive();
-    static const TimingClockMessage TimingClock();
-    static const StartMessage Start();
-    static const ContinueMessage ContinueMessage();
-    static const StopMessage Stop();
-    static const ActiveSensingMessage ActiveSensing();
-    static const ResetMessage Reset();
+    class Continue : public MidiMessage
+    {
+    public:
+      Continue() : MidiMessage(0, MidiMessageStatus::Continue, 0x00, 0x00) {}
+      Continue(const Continue &that) : MidiMessage(that) {}
+    };
 
-    // SystemExclusive = 0xf0,
-  };
+
+    class EndofExclusive : public MidiMessage
+    {
+    public:
+      EndofExclusive() : MidiMessage(0, MidiMessageStatus::EndofExclusive, 0x00, 0x00) {}
+      EndofExclusive(const EndofExclusive &that) : MidiMessage(that) {}
+    };
+
+    class PitchBendChange : public MidiChannelMessage
+    {
+    public:
+      PitchBendChange(uint8_t channel, int16_t value)
+          : MidiChannelMessage(
+                MidiMessageStatus::PitchBendChange,
+                channel,
+                ((value + 0x2000)),       // low 7 bits
+                (((value + 0x2000) >> 7)) // high 7 bits
+            )
+      {
+      }
+      PitchBendChange(const PitchBendChange &that) : MidiChannelMessage(that) {}
+
+      inline int16_t value() { return (int16_t)_arg1 + (((int16_t)_arg1) << 7) - 0x2000; }
+    };
+
+    class ProgramChange : public MidiChannelMessage
+    {
+    public:
+      ProgramChange(uint8_t channel, uint8_t programNumber) : MidiChannelMessage(MidiMessageStatus::ProgramChange, channel, programNumber) {}
+      ProgramChange(const ProgramChange &that) : MidiChannelMessage(that) {}
+      inline uint8_t programNumber() { return _arg2; }
+    };
+    class Reset : public MidiMessage
+    {
+    public:
+      Reset() : MidiMessage(0, MidiMessageStatus::Reset, 0x00, 0x00) {}
+      Reset(const Reset &that) : MidiMessage(that) {}
+    };
+    class SongPositionPointer : public MidiMessage
+    {
+    public:
+      SongPositionPointer(uint16_t beats) : MidiMessage(2, MidiMessageStatus::SongPositionPointer, beats & 0x7F, (beats >> 7) & 0x7F) {}
+      SongPositionPointer(const SongPositionPointer &that) : MidiMessage(that) {}
+      inline uint16_t beats() { return ((uint16_t)((_arg2 & 0x7F) << 7)) + ((uint16_t)(_arg1 & 0x7F)); }
+    };
+
+    class SongSelect : public MidiMessage
+    {
+    public:
+      SongSelect(uint8_t songNumber) : MidiMessage(1, MidiMessageStatus::SongSelect, songNumber, 0x00) {}
+      SongSelect(const SongSelect &that) : MidiMessage(that) {}
+      inline uint8_t songNumber() { return _arg1; }
+    };
+    class Start : public MidiMessage
+    {
+    public:
+      Start() : MidiMessage(0, MidiMessageStatus::Start, 0x00, 0x00) {}
+      Start(const Start &that) : MidiMessage(that) {}
+    };
+    class Stop : public MidiMessage
+    {
+    public:
+      Stop() : MidiMessage(0, MidiMessageStatus::Stop, 0x00, 0x00) {}
+      Stop(const Stop &that) : MidiMessage(that) {}
+    };
+    class TimeCodeQuarterFrame : public MidiMessage
+    {
+    public:
+      TimeCodeQuarterFrame(uint8_t messageType, uint8_t values) : MidiMessage(1, MidiMessageStatus::TimeCodeQuarterFrame, ((messageType << 4) & 0x70) | (values & 0x0F), 0x00) {}
+      TimeCodeQuarterFrame(const TimeCodeQuarterFrame &that) : MidiMessage(that) {}
+
+      inline uint8_t messageType() { return _arg1 & 0x70 >> 4; }
+      inline uint8_t values() { return _arg1 & 0x0F; }
+    };
+    class TimingClock : public MidiMessage
+    {
+    public:
+      TimingClock() : MidiMessage(0, MidiMessageStatus::TimingClock, 0x00, 0x00) {}
+      TimingClock(const TimingClock &that) : MidiMessage(that) {}
+    };
+
+    class TuneRequest : public MidiMessage
+    {
+    public:
+      TuneRequest() : MidiMessage(0, MidiMessageStatus::TuneRequest, 0x00, 0x00) {}
+      TuneRequest(const TuneRequest &that) : MidiMessage(that) {}
+    };
+
+  }
 }
