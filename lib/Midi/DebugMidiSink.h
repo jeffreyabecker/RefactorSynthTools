@@ -14,11 +14,21 @@ namespace Midi
     bool _isConnected;
 
   public:
-    DebugMidiSink();
-    virtual void send(Midi::MidiMessage message);
-    virtual void start();
-    virtual void stop();
-    virtual bool isConnected();
+    DebugMidiSink() : _isConnected(false) {}
+    virtual void send(Midi::MidiMessage message) override
+    {
+      if (_isConnected)
+      {
+        uint32_t buffer;
+        size_t length = message.length();
+        message.getData((uint8_t *)&buffer, 0, length);
+        buffer = buffer >> 8;
+        // ESP_LOGD(MidiDebugTAG, "%01u 0x%06X", length, buffer);
+      }
+    }
+    virtual void start() override { _isConnected = true; }
+    virtual void stop() override { _isConnected = false; }
+    virtual bool isConnected() override { return _isConnected; }
   };
 
 }

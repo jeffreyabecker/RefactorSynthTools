@@ -11,10 +11,12 @@ namespace Midi
         uint8_t _value;
         static const uint8_t OctaveMask = 0x7F;
         static const float _frequencies[128];
-        static inline uint8_t offset(uint8_t octaveNumber){ return (12 * ((octaveNumber & OctaveMask) - 1)); }
+        static inline uint8_t offset(uint8_t octaveNumber) { return (12 * ((octaveNumber & OctaveMask) - 1)); }
+
     public:
         MidiNote(uint8_t value) : _value(value & OctaveMask) {}
         MidiNote(const MidiNote &that) : _value(that._value) {}
+        // These functions are named like this because one-letter names seem to break Arduino
         static inline MidiNote Note_G(uint8_t octaveNumber) { return MidiNote(31 + MidiNote::offset(octaveNumber)); }
         static inline MidiNote Note_FSharp(uint8_t octaveNumber) { return MidiNote(30 + MidiNote::offset(octaveNumber)); }
         static inline MidiNote Note_Gb(uint8_t octaveNumber) { return MidiNote(30 + MidiNote::offset(octaveNumber)); }

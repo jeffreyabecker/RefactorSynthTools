@@ -47,7 +47,7 @@ namespace Midi
     }
     inline MidiMessageStatus status() { return (((uint8_t)_status) & 0xF0) == 0xF0 ? _status : (MidiMessageStatus)(((uint8_t)_status) & 0xF0); }
     inline uint8_t length() { return _length; }
-    void getData(uint8_t *buffer, size_t offset, size_t length)
+    virtual void getData(uint8_t *buffer, size_t offset, size_t length)
     {
       if (offset + length < _length)
       {
