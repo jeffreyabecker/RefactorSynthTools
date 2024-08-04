@@ -45,19 +45,19 @@
 #include "SignalTransformation.h"
 namespace Synthesis
 {
+    template <size_t BufferLength>
     class AllPass : public SignalTransformation
     {
     protected:
-        SampleBuffer &_buff;
+        FixedSampleBuffer<BufferLength> _buff;
         uint32_t _p;
         float _g;
         uint32_t _lim;
         virtual void updateWorkingCopy(size_t index, uint32_t &p, float &g, uint32_t &lim) = 0;
 
     public:
-        AllPass(SampleBuffer &buffer) : _buff(buffer), _p(0.0f), _g(0.00025f) {}
-        AllPass(SampleBuffer &b, uint32_t p, uint32_t g, uint32_t lim) : _buff(b), _p(p), _g(g), _lim(lim) {}
-        AllPass(const AllPass &that) : _buff(that._buff), _p(that._p), _g(that._g), _lim(that._lim) {}
+        AllPass() : _p(0.0f), _g(0.00025f) {}
+        AllPass(uint32_t p, uint32_t g, uint32_t lim) : _p(p), _g(g), _lim(lim) {}
 
         virtual void process(SampleBuffer &inputSignal, SampleBuffer &outputSignal) override
         {
@@ -73,7 +73,7 @@ namespace Synthesis
                 _buff[copy_p] = newV;
                 copy_p++;
                 updateWorkingCopy(n, copy_p, copy_g, copy_lim);
-  
+
                 // reverb uses almost exactly the same algorithm but with:
                 // if (ap2.p >= ap2.lim)
                 // {
@@ -87,7 +87,6 @@ namespace Synthesis
         }
         virtual void reset()
         {
-
         }
         void setG(float value)
         {

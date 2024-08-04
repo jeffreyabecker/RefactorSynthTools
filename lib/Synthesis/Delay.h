@@ -40,7 +40,7 @@
 #include <cstddef>
 #include <stdint.h>
 #include "SampleBuffer.h"
-#include "ml_waveform.h"
+
 #include <math.h>
 #include "SignalTransformation.h"
 
@@ -50,7 +50,7 @@ namespace Synthesis
     class Delay : public SignalTransformation
     {
     protected:
-        FixedSampleBuffer &_buffer;
+        FixedSampleBuffer<BufferLength> _buffer;
         float _outputLevel = 0;
         float _inputLevel = 1.0f;
         float _delayFeedback = 0;

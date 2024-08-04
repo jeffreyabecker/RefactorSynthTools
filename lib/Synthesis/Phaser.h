@@ -43,11 +43,11 @@
 #include "AllPass.h"
 namespace Synthesis
 {
-
+    template <size_t BufferLength>
     class Phaser : public SignalTransformation
     {
     private:
-        class PhaserAllPass : public AllPass
+        class PhaserAllPass : public AllPass<BufferLength>
         {
         protected:
             SampleBuffer &_lfoBuffer;
@@ -62,16 +62,14 @@ namespace Synthesis
             }
 
         public:
-            PhaserAllPass(SampleBuffer &lfoBuffer, SampleBuffer &allPassBuffer) : _lfoBuffer(lfoBuffer),
-                                                                                  _phaserMod(1.0),
-                                                                                  AllPass(allPassBuffer) {}
+            PhaserAllPass(SampleBuffer &lfoBuffer) : _lfoBuffer(lfoBuffer), _phaserMod(1.0) {}
 
             void reset()
             {
                 _phaserMod = 1.0;
             }
         };
-        
+
         PhaserAllPass _allPass;
         SampleBuffer &_lfoBuffer;
         float _inputLevel = 1.0f;

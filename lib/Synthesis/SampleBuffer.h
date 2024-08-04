@@ -66,7 +66,29 @@ namespace Synthesis
         virtual size_t length() override { return BufferLength; };
         virtual float &operator[](size_t index) override
         {
-            _bogusSampleForReturnFromOperator = 0.0;
+            _bogusSampleForReturnFromOperator = _samples[index];
+            return _bogusSampleForReturnFromOperator;
+        }
+        virtual void clear() override
+        {
+            // this method intentionally left blank;
+        }
+    };
+
+    template <size_t BufferLength>
+    class FixedValueSampleBuffer : public SampleBuffer
+    {
+    private:
+        float _value;
+        float _bogusSampleForReturnFromOperator;
+
+    public:
+        FixedValueSampleBuffer(float value) : _value(value) {}
+        FixedValueSampleBuffer(const FixedValueSampleBuffer &that) : _value(that._value) {}
+        virtual size_t length() override { return BufferLength; };
+        virtual float &operator[](size_t index) override
+        {
+            _bogusSampleForReturnFromOperator = _value;
             return _bogusSampleForReturnFromOperator;
         }
         virtual void clear() override

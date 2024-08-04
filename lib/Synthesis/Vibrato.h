@@ -49,11 +49,12 @@
 
 namespace Synthesis
 {
-
+    template <size_t BufferLength>
     class Vibrato : public SignalTransformation
     {
     private:
-        SampleBuffer &_buffer;
+        static FixedValueSampleBuffer<BufferLength> _emptyModBuffer(0.0f);
+        FixedSampleBuffer<BufferLength> _buffer;
         SampleBuffer &_modBuffer;
 
         float _sample_rate;
@@ -65,9 +66,13 @@ namespace Synthesis
         int32_t _inCnt;
 
     public:
-        Vibrato(SampleBuffer &buffer, SampleBuffer &modBuffer, float sample_rate) : _buffer(buffer),
-                                                                                    _modBuffer(modBuffer),
-                                                                                    _sample_rate(sample_rate)
+        Vibrato(float sample_rate, SampleBuffer &modBuffer) : _sample_rate(sample_rate),
+                                                              _modBuffer(modBuffer)
+        {
+            this->reset();
+        }
+        Vibrato(float sample_rate) : : _sample_rate(sample_rate),
+                                       _modBuffer(_emptyModBuffer)
         {
             this->reset();
         }
@@ -78,11 +83,7 @@ namespace Synthesis
             _depthInv = 0.0f;
             _mod_multiplier = 0.5f * (_buffer.length() - 2);
             _mod_multiplier_curr = _mod_multiplier;
-            auto bufferSize = _buffer.length();
-            for (size_t i = 0; i < bufferSize; i++)
-            {
-                _buffer[i] = 0;
-            }
+            _buffer.clear();
         }
 
         virtual void process(SampleBuffer &inputSignal, SampleBuffer &outputSignal)

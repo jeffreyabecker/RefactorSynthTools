@@ -42,10 +42,7 @@
  */
 
 #pragma once
-#include <cstddef>
 #include "SampleBuffer.h"
-#include "ml_waveform.h"
-#include <math.h>
 
 namespace Synthesis
 {

@@ -43,6 +43,7 @@
 #include <stdint.h>
 #include "SampleBuffer.h"
 #include "SignalTransformation.h"
+#include "math.h"
 namespace Synthesis
 {
     class LowFrequencyOscillator : public SignalTransformation
