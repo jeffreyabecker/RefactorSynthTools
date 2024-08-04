@@ -51,13 +51,10 @@ namespace Synthesis
         float _sample_rate;
         float _frequency;
         float _phase;
-        float *buffer;
-        float bufferSize;
+
+
 
     public:
-        void Process(const float *frequency_in, float *buffer, uint32_t len);
-        void Process(const float *frequency_in, uint32_t len);
-
         LowFrequencyOscillator(float sample_rate) : _sample_rate(sample_rate), _phase(0.0f), _frequency(1.0f)
         {
         }

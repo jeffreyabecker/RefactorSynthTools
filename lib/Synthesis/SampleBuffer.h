@@ -36,6 +36,16 @@ namespace Synthesis
         float[BufferLength] _samples;
 
     public:
+        FixedSampleBuffer() {}
+        FixedSampleBuffer(const SampleBuffer &that)
+        {
+            auto thatLength = that.length();
+            for (size_t i = 0; i < thatLength && i < BufferLength; i++)
+            {
+                _samples[i] = that[i];
+            }
+        }
+
         virtual size_t length() override { return BufferLength; };
         virtual float &operator[](size_t index) override
         {
@@ -56,7 +66,7 @@ namespace Synthesis
         virtual size_t length() override { return BufferLength; };
         virtual float &operator[](size_t index) override
         {
-
+            _bogusSampleForReturnFromOperator = 0.0;
             return _bogusSampleForReturnFromOperator;
         }
         virtual void clear() override

@@ -20,7 +20,6 @@ namespace Midi
         virtual void HandleProgramChange(Messages::ProgramChange &msg) {}
         virtual void HandleChannelPressure(Messages::ChannelPressure &msg) {}
         virtual void HandlePitchBendChange(Messages::PitchBendChange &msg) {}
-
         virtual void HandleTimeCodeQuarterFrame(Messages::TimeCodeQuarterFrame &msg) {}
         virtual void HandleSongPositionPointer(Messages::SongPositionPointer &msg) {}
         virtual void HandleSongSelect(Messages::SongSelect &msg) {}
@@ -63,7 +62,6 @@ namespace Midi
                 case MidiMessageStatus::PitchBendChange:
                     HandlePitchBendChange(static_cast<Messages::PitchBendChange &>(message));
                     break;
-
                 case MidiMessageStatus::TimeCodeQuarterFrame:
                     HandleTimeCodeQuarterFrame(static_cast<Messages::TimeCodeQuarterFrame &>(message));
                     break;

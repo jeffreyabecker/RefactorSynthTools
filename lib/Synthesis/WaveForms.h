@@ -54,105 +54,135 @@ namespace Synthesis
             virtual float at(size_t offset) = 0;
         };
 
-        template <size_t BitLength>
-        class FixedWaveForm : public FixedSampleBuffer<(1 << BitLength)>, WaveForm
-        {
-        protected:
-            const size_t Mask = ((1 << BitLength) - 1);
-            const size_t BufferLength = (1 << WAVEFORM_BIT);
+    };
 
-        public:
-            virtual float at(size_t offset) override
-            {
-                return _samples[(((offset) >> (32 - BitLength)) & Mask)];
-            }
-        };
+    template <size_t BitLength>
+    class DynamicWaveForm : public WaveForm, public SampleBuffer
+    {
+    private:
+    protected:
+        const size_t Mask = ((1 << BitLength) - 1);
+        const size_t BufferLength = (1 << BitLength);
+        float _bogusSampleForReturnFromOperator;
+        virtual float generateValue(size_t index) = 0;
 
-        template <size_t BitLength>
-        class SineFixedWaveForm : public FixedWaveForm<BitLength>
+    public:
+        DynamicWaveForm() {}
+        virtual float at(size_t offset) override
         {
-        public:
-            SineFixedWaveForm()
-            {
-                for (int i = 0; i < BufferLength; i++)
-                {
-                    float val = (float)sin(i * 2.0 * 3.1415926535897932384626433832795 / BufferLength);
-                    _samples[i] = val;
-                }
-            }
-        };
-        template <size_t BitLength>
-        class SawToothFixedWaveForm : public FixedWaveForm<BitLength>
+            return _samples[(((offset) >> (32 - BitLength)) & Mask)];
+        }
+        virtual size_t length() override { return (1 << BitLength); };
+        virtual float &operator[](size_t index) override
         {
-        public:
-            SawToothFixedWaveForm()
-            {
-                for (int i = 0; i < BufferLength; i++)
-                {
-                    _samples[i] = (2.0f * ((float)i) / ((float)BufferLength)) - 1.0f;
-                }
-            }
-        };
-        template <size_t BitLength>
-        class SquareFixedWaveForm : public FixedWaveForm<BitLength>
-        {
-        public:
-            SquareFixedWaveForm()
-            {
-                for (int i = 0; i < BufferLength; i++)
-                {
-                    _samples[i] = (i > (BufferLength / 2)) ? 1 : -1;
-                }
-            }
-        };
-        template <size_t BitLength>
-        class PulseFixedWaveForm : public FixedWaveForm<BitLength>
-        {
-        public:
-            PulseFixedWaveForm()
-            {
-                for (int i = 0; i < BufferLength; i++)
-                {
-                    _samples[i] = (i > (BufferLength / 4)) ? 1.0f / 4.0f : -3.0f / 4.0f;
-                }
-            }
-        };
-        template <size_t BitLength>
-        class TriangleFixedWaveForm : public FixedWaveForm<BitLength>
-        {
-        public:
-            TriangleFixedWaveForm()
-            {
-                for (int i = 0; i < BufferLength; i++)
-                {
-                    _samples[i] = ((i > (BufferLength / 2)) ? (((4.0f * (float)i) / ((float)BufferLength)) - 1.0f) : (3.0f - ((4.0f * (float)i) / ((float)BufferLength)))) - 2.0f;
-                }
-            }
-        };
-        template <size_t BitLength>
-        class NoiseFixedWaveForm : public FixedWaveForm<BitLength>
-        {
-        public:
-            NoiseFixedWaveForm()
-            {
-                for (int i = 0; i < BufferLength; i++)
-                {
-                    _samples[i] = ((rand() % (1024)) / 512.0f) - 1.0f;
-                }
-            }
-        };
-        template <size_t BitLength>
-        class SilenceFixedWaveForm : public FixedWaveForm<BitLength>
-        {
-        public:
-            SilenceFixedWaveForm()
-            {
-                for (int i = 0; i < BufferLength; i++)
-                {
-                    _samples[i] = 0;
-                }
-            }
-        };
+            _bogusSampleForReturnFromOperator = generateValue(index);
+            return _bogusSampleForReturnFromOperator;
+        }
+        virtual void clear() override {}
+    };
 
-    }
+    template <size_t BitLength>
+    class FixedWaveForm : public FixedSampleBuffer<(1 << BitLength)>, WaveForm
+    {
+    protected:
+        const size_t Mask = ((1 << BitLength) - 1);
+        const size_t BufferLength = (1 << BitLength);
+        FixedWaveForm(DynamicWaveForm<BitLength> dynamicForm)
+        {
+        }
+
+    public:
+        virtual float at(size_t offset) override
+        {
+            return _samples[(((offset) >> (32 - BitLength)) & Mask)];
+        }
+    };
+
+    template <size_t BitLength>
+    class SineDynamicWaveForm : public DynamicWaveForm
+    {
+    protected:
+        virtual float generateValue(size_t index) override { return (float)sin(i * 2.0 * 3.1415926535897932384626433832795 / BufferLength); }
+    };
+
+    template <size_t BitLength>
+    class SineFixedWaveForm : public FixedWaveForm<BitLength>
+    {
+    public:
+        SineFixedWaveForm() : FixedWaveForm(SineDynamicWaveForm()) {}
+    };
+
+    template <size_t BitLength>
+    class SawToothDynamicWaveForm : public DynamicWaveForm
+    {
+    protected:
+        virtual float generateValue(size_t index) override { return (2.0f * ((float)index) / ((float)BufferLength)) - 1.0f; }
+    };
+
+    template <size_t BitLength>
+    class SawToothFixedWaveForm : public FixedWaveForm<BitLength>
+    {
+    public:
+        SawToothFixedWaveForm() : FixedWaveForm(SawToothDynamicWaveForm()) {}
+    };
+
+    template <size_t BitLength>
+    class SquareDynamicWaveForm : public DynamicWaveForm
+    {
+    protected:
+        virtual float generateValue(size_t index) override { return (index > (BufferLength / 2)) ? 1 : -1; }
+    };
+
+    template <size_t BitLength>
+    class SquareFixedWaveForm : public FixedWaveForm<BitLength>
+    {
+    public:
+        SquareFixedWaveForm() : FixedWaveForm(SquareDynamicWaveForm){}
+    };
+
+
+    
+    template <size_t BitLength>
+    class PulseFixedWaveForm : public FixedWaveForm<BitLength>
+    {
+    public:
+        PulseFixedWaveForm()
+        {
+            for (int i = 0; i < BufferLength; i++)
+            {
+                _samples[i] = (i > (BufferLength / 4)) ? 1.0f / 4.0f : -3.0f / 4.0f;
+            }
+        }
+    };
+    template <size_t BitLength>
+    class TriangleFixedWaveForm : public FixedWaveForm<BitLength>
+    {
+    public:
+        TriangleFixedWaveForm()
+        {
+            for (int i = 0; i < BufferLength; i++)
+            {
+                _samples[i] = ((i > (BufferLength / 2)) ? (((4.0f * (float)i) / ((float)BufferLength)) - 1.0f) : (3.0f - ((4.0f * (float)i) / ((float)BufferLength)))) - 2.0f;
+            }
+        }
+    };
+    template <size_t BitLength>
+    class NoiseFixedWaveForm : public FixedWaveForm<BitLength>
+    {
+    public:
+        NoiseFixedWaveForm()
+        {
+            for (int i = 0; i < BufferLength; i++)
+            {
+                _samples[i] = ((rand() % (1024)) / 512.0f) - 1.0f;
+            }
+        }
+    };
+
+    template <size_t BitLength>
+    class SilenceWaveForm : public DynamicWaveForm<BitLength>
+    {
+    protected:
+        virtual float generateValue(size_t index) override { reutrn 0; }
+    };
 }

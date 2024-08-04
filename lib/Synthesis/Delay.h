@@ -46,10 +46,11 @@
 
 namespace Synthesis
 {
+    template <size_t BufferLength>
     class Delay : public SignalTransformation
     {
     protected:
-        SampleBuffer &_buffer;
+        FixedSampleBuffer &_buffer;
         float _outputLevel = 0;
         float _inputLevel = 1.0f;
         float _delayFeedback = 0;
@@ -67,16 +68,15 @@ namespace Synthesis
         const float DefaultFeedback = 0.0f;
         const float DefaultShift = 2.0f / 3.0f;
 
-        Delay(SampleBuffer &buffer)
-            : Delay(buffer, DefaultDelayLength, DefaultInputLevel, DefaultOutputLevel, DefaultFeedback, DefaultShift)
+        Delay()
+            : Delay(DefaultDelayLength, DefaultInputLevel, DefaultOutputLevel, DefaultFeedback, DefaultShift)
         {
         }
-        Delay(SampleBuffer &buffer, uint32_t delayLength, float inputLevel, float outputLevel, float feedback, float shift) : _buffer(buffer),
-                                                                                                                              _delayLength(delayLength),
-                                                                                                                              _inputLevel(inputLevel),
-                                                                                                                              _outputLevel(outputLevel),
-                                                                                                                              _delayFeedback(feedback),
-                                                                                                                              _shift(shift)
+        Delay(uint32_t delayLength, float inputLevel, float outputLevel, float feedback, float shift) : _delayLength(delayLength),
+                                                                                                        _inputLevel(inputLevel),
+                                                                                                        _outputLevel(outputLevel),
+                                                                                                        _delayFeedback(feedback),
+                                                                                                        _shift(shift)
         {
             auto bufferLength = buffer.length();
 

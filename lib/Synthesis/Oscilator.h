@@ -41,7 +41,7 @@
 #pragma once
 #include <cstddef>
 #include "SampleBuffer.h"
-#include "ml_waveform.h"
+#include "WaveForms.h"
 #include <math.h>
 #include "SignalTransformation.h"
 
@@ -51,8 +51,8 @@ namespace Synthesis
     class Oscilator : SignalTransformation
     {
     protected:
-        SampleBuffer &_morphWaveForm;
-        SampleBuffer &_oscilatorWaveForm;
+        WaveForms::WaveForm &_morphWaveForm;
+        WaveForms::WaveForm &_oscilatorWaveForm;
         uint8_t _oscilators;
         uint32_t _samplePos;
         uint32_t _addVal;
@@ -72,12 +72,12 @@ namespace Synthesis
             {
                 _samplePos += (uint32_t)((_pitchMultiplier) * ((float)_addVal) * _pitchOctave * _pitch * _pitchMod);
                 uint32_t samplePos = _samplePos;
-                float morphMod = _morphWaveForm[WAVEFORM_I(_samplePos)];
+                float morphMod = _morphWaveForm.at(_samplePos);
                 morphMod *= ((float)89478480);
                 morphMod *= (_morph) * 64;
                 _samplePos += morphMod;
 
-                float sig = _oscilatorWaveForm[WAVEFORM_I(_samplePos)];
+                float sig = _oscilatorWaveForm.at(_samplePos);
 
                 sig *= _volume;
                 outputSignal[n] += sig * (_panEnabled ? _pan : 1.0f);
@@ -86,8 +86,8 @@ namespace Synthesis
 
     public:
         Oscilator(
-            SampleBuffer &morphWaveForm,
-            SampleBuffer &oscilatorWaveForm,
+            WaveForms::WaveForm &morphWaveForm,
+            WaveForms::WaveForm &oscilatorWaveForm,
             uint8_t voices) : _morphWaveForm(morphWaveForm),
                               _oscilatorWaveForm(oscilatorWaveForm),
                               _oscilators(voices * 3),
