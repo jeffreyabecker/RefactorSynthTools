@@ -47,53 +47,40 @@
 #include "SignalTransformation.h"
 namespace Synthesis
 {
-    class Tremolo: public SignalTransformation
+    template <size_t BufferLength>
+    class Tremolo : public SignalTransformation
     {
     private:
-        float _sample_rate;
-        float _speed;
         float _phase_shift;
         float _value;
         float _depth;
         float _depthInv;
+        SampleBuffer &_modulationBuffer;
 
     public:
-        Tremolo(float sample_rate, float phaseShift)
-            : _sample_rate(sample_rate),
+        Tremolo(SampleBuffer &modulationBuffer, float phaseShift)
+            : _modulationBuffer(modulationBuffer),
+
               _value(0),
               _depth(0),
               _depthInv(1),
-              _phase_shift(phaseShift)
+              _phase_shift(1)
         {
 
             setSpeed(6.5f);
-            setPhaseShift(0.5f);
         }
 
-        void process(float *left, float *right, int32_t len)
+        virtual void process(const SampleBuffer &inputSample, SampleBuffer &outputSample) override
         {
-            for (int n = 0; n < len; n++)
+            for (size_t n = 0; n < BufferLength; n++)
             {
-
-                right[n] *= _depthInv + _depth * sinf(_phase_shift + _value);
-                _value += _speed;
-
-                /* avoid the runaway */
-                if (_value >= 2 * M_PI)
-                {
-                    _value -= 2 * M_PI;
-                }
+                outputSample[n] = (inputSample[n] * _depthInv) + (inputSample[n] * (1.0f + (_phase_shift * modulationBuffer[n])) * 0.5f * _depth);
             }
-        }
-
-        void setSpeed(float speed)
-        {
-            this->_speed = speed * 2 / _sample_rate * M_PI;
         }
 
         void setPhaseShift(float shift)
         {
-            _phase_shift = shift * 2 * M_PI;
+            _phase_shift = shift;
         }
 
         void setDepth(float new_depth)

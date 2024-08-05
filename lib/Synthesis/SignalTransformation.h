@@ -46,7 +46,7 @@
 
 namespace Synthesis
 {
-
+    template <size_t BufferLength>
     class SignalTransformation
     {
     public:
@@ -54,7 +54,7 @@ namespace Synthesis
         {
             process(signal, signal);
         }
-        virtual void process(SampleBuffer &inputSignal, SampleBuffer &outputSignal) = 0;
+        virtual void process(const SampleBuffer &inputSignal, SampleBuffer &outputSignal) = 0;
         virtual void reset() = 0;
     };
 

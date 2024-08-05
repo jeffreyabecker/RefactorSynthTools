@@ -47,7 +47,7 @@
 
 namespace Synthesis
 {
-
+    template <size_t BufferLength>
     class Oscilator : SignalTransformation
     {
     protected:
@@ -65,10 +65,10 @@ namespace Synthesis
         float _pitchMod;
         float _morph;
 
-        void OscProcessSingle(SampleBuffer &inputSignal, SampleBuffer &outputSignal)
+        inline void OscProcessSingle(SampleBuffer &inputSignal, SampleBuffer &outputSignal)
         {
-            auto bufferLength = inputSignal.length();
-            for (size_t n = 0U; n < bufferLength; n++)
+
+            for (size_t n = 0U; n < BufferLength; n++)
             {
                 _samplePos += (uint32_t)((_pitchMultiplier) * ((float)_addVal) * _pitchOctave * _pitch * _pitchMod);
                 uint32_t samplePos = _samplePos;
@@ -96,7 +96,7 @@ namespace Synthesis
         {
         }
 
-        virtual void process(SampleBuffer &inputSignal, SampleBuffer &outputSignal) override
+        virtual void process(const SampleBuffer &inputSignal, SampleBuffer &outputSignal) override
         {
 
             for (int i = 0; i < _oscilators; i++)

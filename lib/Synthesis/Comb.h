@@ -49,7 +49,7 @@ namespace Synthesis
     class Comb : public SignalTransformation
     {
     private:
-        StaticSampleBuffer<CombBufferLength> buffer;
+        StaticSampleBuffer<CombBufferLength> _buffer;
         int _p;
         float _g;
         int _lim;
@@ -60,16 +60,16 @@ namespace Synthesis
                                         _lim(lim)
         {
         }
-        virtual void process(SampleBuffer &inputSignal, SampleBuffer &outputSignal) override
+        virtual void process(const SampleBuffer &inputSignal, SampleBuffer &outputSignal) override
         {
             int copy_p = _p;
             float copy_g = _g;
             int copy_lim = _lim;
-            for (int n = 0; n < buffLen; n++)
+            for (int n = 0; n < CombBufferLength; n++)
             {
-                const float readback = buffer[copy_p];
+                const float readback = _buffer[copy_p];
                 const float newV = readback * copy_g + inputSample[n];
-                buffer[copy_p] = newV;
+                _buffer[copy_p] = newV;
                 copy_p++;
                 if (copy_p >= copy_lim)
                 {

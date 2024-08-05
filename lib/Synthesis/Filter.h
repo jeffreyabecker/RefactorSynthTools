@@ -48,6 +48,7 @@
 #include "SignalTransformation.h"
 namespace Synthesis
 {
+    template <size_t BufferLength>
     class Filter : public SignalTransformation
     {
     protected:
@@ -67,7 +68,7 @@ namespace Synthesis
             _w[1] = 0.0;
         }
 
-        virtual void process(SampleBuffer &inputSignal, SampleBuffer &outputSignal) override
+        virtual void process(const SampleBuffer &inputSignal, SampleBuffer &outputSignal) override
         {
             auto len = inputSignal.length();
             for (size_t n = 0; n < len; n++)
@@ -90,6 +91,7 @@ namespace Synthesis
         }
     };
 
+    template <size_t BufferLength>
     class LowPassFilter : public Filter
     {
     public:
@@ -146,7 +148,7 @@ namespace Synthesis
             _w[1] = 0;
         }
     };
-
+    template <size_t BufferLength>
     class NotchFilter : public Filter
     {
         /*

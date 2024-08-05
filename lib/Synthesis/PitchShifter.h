@@ -49,14 +49,14 @@
 namespace Synthesis
 {
 
+    template <size_t BufferLength>
     class PitchShifter
     {
     private:
-        float _sample_rate;
         float _depth;
-        SampleBuffer &_buffer;
-        int32_t inCnt;
-        float outCnt;
+        StaticSampleBuffer _buffer;
+        int32_t _inCnt;
+        float _outCnt;
         float _speed;
         float _dryV;
         float _wetV;
@@ -71,66 +71,61 @@ namespace Synthesis
          * @param dry
          * @param wet
          */
-
-    public:
-        PitchShifter(SampleBuffer &buffer, float sample_rate) : _buffer(buffer),
-                                                                _sample_rate(sample_rate),
-                                                                _depth(1.0f),
-                                                                _speed(1),
-                                                                _wetV(1.0f),
-                                                                _dryV(0.0f),
-                                                                _feedback(0.125f)
-        {
-
-            inCnt = 0;
-            outCnt = 0;
-        }
-
-        uint32_t minDistance(int32_t pointerA, int32_t pointerB)
+        inline uint32_t minDistance(int32_t pointerA, int32_t pointerB)
         {
             uint32_t distance1 = i32_abs(pointerA - pointerB);
-            uint32_t distance2 = _buffer.length() - distance1;
+            uint32_t distance2 = BufferLength - distance1;
             return (distance1 < distance2) ? distance1 : distance2;
         }
 
-        void Process(const float *in, float *out, uint32_t count)
+    public:
+        PitchShifter() : _depth(1.0f),
+                         _speed(1),
+                         _wetV(1.0f),
+                         _dryV(0.0f),
+                         _feedback(0.125f)
         {
-            auto bufferLength = _buffer.length();
 
-            for (uint32_t n = 0; n < count; n++)
+            _inCnt = 0;
+            _outCnt = 0;
+        }
+
+        virtual void process(const SampleBuffer &inputSignal, SampleBuffer outputSignal) override
+        {
+            for (size_t i = 0; i < count; i++)
             {
-                float outCnt2 = outCnt + (_buffer.length() / 2);
-                if (outCnt2 >= bufferLength)
+                float outCnt2 = _outCnt + (BufferLength / 2);
+                if (outCnt2 >= BufferLength)
                 {
-                    outCnt2 -= bufferLength;
+                    outCnt2 -= BufferLength;
                 }
 
-                _buffer[inCnt] = in[n];
-                uint32_t outU = floor(outCnt);
+                _buffer[_inCnt] = in[i];
+                uint32_t outU = floor(_outCnt);
                 uint32_t outU2 = floor(outCnt2);
-                uint32_t diffU = minDistance(inCnt, outU);
+                uint32_t diffU = minDistance(_inCnt, outU);
                 float diff = diffU;
-                diff *= 1.0f / (bufferLength / 2);
+                diff *= 1.0f / (BufferLength / 2);
                 float diffI = 1.0f - diff;
-                out[n] = (diff * _buffer[outU] + diffI * _buffer[outU2]) * _wetV + in[n] * _dryV;
+                out[i] = (diff * _buffer[outU] + diffI * _buffer[outU2]) * _wetV + in[i] * _dryV;
 
-                _buffer[inCnt] += _feedback * out[n];
+                _buffer[_inCnt] += _feedback * out[i];
 
-                inCnt++;
-                if (inCnt >= bufferLength)
+                _inCnt++;
+                if (_inCnt >= BufferLength)
                 {
-                    inCnt -= bufferLength;
+                    _inCnt -= BufferLength;
                 }
 
-                outCnt += _speed;
-                outCnt++;
-                if (outCnt >= bufferLength)
+                _outCnt += _speed;
+                _outCnt++;
+                if (_outCnt >= BufferLength)
                 {
-                    outCnt -= bufferLength;
+                    _outCnt -= BufferLength;
                 }
-                if (outCnt < 0)
+                if (_outCnt < 0)
                 {
-                    outCnt += bufferLength;
+                    _outCnt += BufferLength;
                 }
             }
         }

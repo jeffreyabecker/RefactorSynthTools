@@ -63,8 +63,7 @@
 #include "SignalTransformation.h"
 #include "AllPass.h"
 #include "Comb.h"
-#define REVERB_BUFFER_MAX_INTERNAL (a, b)((a) > (b) ? (a) : (b))
-#define REVERB_BUFF_MAX(COMBBUFFERLENGTH_0, COMBBUFFERLENGTH_1, COMBBUFFERLENGTH_2, COMBBUFFERLENGTH_3, ALLPASSBUFFERLENGTH_0, ALLPASSBUFFERLENGTH_1, ALLPASSBUFFERLENGTH_2) REVERB_BUFFER_MAX_INTERNAL(REVERB_BUFFER_MAX_INTERNAL(REVERB_BUFFER_MAX_INTERNAL(REVERB_BUFFER_MAX_INTERNAL(REVERB_BUFFER_MAX_INTERNAL(REVERB_BUFFER_MAX_INTERNAL(COMBBUFFERLENGTH_0, COMBBUFFERLENGTH_1), COMBBUFFERLENGTH_2), COMBBUFFERLENGTH_3), ALLPASSBUFFERLENGTH_0), ALLPASSBUFFERLENGTH_1), ALLPASSBUFFERLENGTH_2)
+
 namespace Synthesis
 {
 
@@ -91,29 +90,47 @@ namespace Synthesis
     class Reverb : public SignalTransformation
     {
     private:
-        Comb<CombBufferLength_0 * CombBufferLength_0> _comb0();
-        Comb<CombBufferLength_1 * CombBufferLength_1> _comb1();
-        Comb<CombBufferLength_2 * CombBufferLength_2> _comb2();
-        Comb<CombBufferLength_3 * CombBufferLength_3> _comb3();
-        ReverbAllPass<AllPassBufferLength_0 * AllPassBufferLength_0> _allPass0();
-        ReverbAllPass<AllPassBufferLength_1 * AllPassBufferLength_1> _allPass1();
-        ReverbAllPass<AllPassBufferLength_2 * AllPassBufferLength_2> _allPass2();
+        float _rev_level;
+        Comb<CombBufferLength_0 * CombBufferLength_0> _comb0;
+        Comb<CombBufferLength_1 * CombBufferLength_1> _comb1;
+        Comb<CombBufferLength_2 * CombBufferLength_2> _comb2;
+        Comb<CombBufferLength_3 * CombBufferLength_3> _comb3;
+        ReverbAllPass<AllPassBufferLength_0 * AllPassBufferLength_0> _allPass0;
+        ReverbAllPass<AllPassBufferLength_1 * AllPassBufferLength_1> _allPass1;
+        ReverbAllPass<AllPassBufferLength_2 * AllPassBufferLength_2> _allPass2;
 
     public:
-        virtual void process(SampleBuffer &inputSample, SampleBuffer &outputSample) override
+        Reverb() : _comb1(0, 0.827f, (int)(1.0f * CombBufferLength_1 * CombBufferLength_1)),
+                   _comb2(0, 0.783f, (int)(1.0f * CombBufferLength_2 * CombBufferLength_2)),
+                   _comb3(0, 0.764f, (int)(1.0f * CombBufferLength_3 * CombBufferLength_3)),
+                   _allPass0(0, 0.7f, (int)(1.0f * AllPassBufferLength_0 * AllPassBufferLength_0)),
+                   _allPass1(0, 0.7f, (int)(1.0f * AllPassBufferLength_1 * AllPassBufferLength_1)),
+                   _allPass2(0, 0.7f, (int)(1.0f * AllPassBufferLength_2 * AllPassBufferLength_2)),
+                   _rev_time(1.0f),
+                   _rev_level(0)
         {
-            static float inSample[96];
-            for (int n = 0; n < buffLen; n++)
-            {
-                /* create mono sample */
-                inSample[n] = signal_l[n]; /* it may cause unwanted audible effects */
-            }
+        }
+
+        Reverb(float rev_time, float rev_level) : _comb0(0, 0.805f, (int)(rev_time * CombBufferLength_0 * CombBufferLength_0)),
+                                                  _comb1(0, 0.827f, (int)(rev_time * CombBufferLength_1 * CombBufferLength_1)),
+                                                  _comb2(0, 0.783f, (int)(rev_time * CombBufferLength_2 * CombBufferLength_2)),
+                                                  _comb3(0, 0.764f, (int)(rev_time * CombBufferLength_3 * CombBufferLength_3)),
+                                                  _allPass0(0, 0.7f, (int)(rev_time * AllPassBufferLength_0 * AllPassBufferLength_0)),
+                                                  _allPass1(0, 0.7f, (int)(rev_time * AllPassBufferLength_1 * AllPassBufferLength_1)),
+                                                  _allPass2(0, 0.7f, (int)(rev_time * AllPassBufferLength_2 * AllPassBufferLength_2)),
+                                                  _rev_level(rev_level)
+        {
+        }
+        virtual void process(const SampleBuffer &inputSample, SampleBuffer &outputSample) override
+        {
+
             StaticSampleBuffer<SampleBufferLength> newsample();
+
             newsample.clear();
-            _comb0.process(inputSample, newsample);
-            _comb1.process(inputSample, newsample);
-            _comb2.process(inputSample, newsample);
-            _comb3.process(inputSample, newsample);
+            _comb0.process(inputCopy, newsample);
+            _comb1.process(inputCopy, newsample);
+            _comb2.process(inputCopy, newsample);
+            _comb3.process(inputCopy, newsample);
 
             for (int n = 0; n < SampleBufferLength; n++)
             {
@@ -123,14 +140,16 @@ namespace Synthesis
             _allPass1.processInplace(newsample);
             _allPass2.processInplace(newsample);
 
-
             /* apply reverb level */
-            const float level = rev_level;
+
             for (int n = 0; n < SampleBufferLength; n++)
             {
-                newsample[n] *= level;
+                newsample[n] *= _rev_level;
                 out[n] = signal_l[n] + newsample[n];
             }
+        }
+        void setLevel(float level){
+            _rev_level = leve;
         }
     };
 }

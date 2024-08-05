@@ -46,14 +46,13 @@
 #include "math.h"
 namespace Synthesis
 {
+    template <size_t BufferLength>
     class LowFrequencyOscillator : public SignalTransformation
     {
     private:
         float _sample_rate;
         float _frequency;
         float _phase;
-
-
 
     public:
         LowFrequencyOscillator(float sample_rate) : _sample_rate(sample_rate), _phase(0.0f), _frequency(1.0f)
@@ -64,10 +63,9 @@ namespace Synthesis
             _phase = 0.0f;
             _frequency = 1.0f;
         }
-        virtual void process(SampleBuffer &inputSignal, SampleBuffer &outputSignal) override
+        virtual void process(const SampleBuffer &inputSignal, SampleBuffer &outputSignal) override
         {
-            auto bufferLength = inputSignal.length();
-            for (size_t n = 0; n < bufferLength; n++)
+            for (size_t n = 0; n < BufferLength; n++)
             {
                 const float omega = inputSignal[n] * 2.0f * M_PI / (_sample_rate);
 

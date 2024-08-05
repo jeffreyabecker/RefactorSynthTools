@@ -76,19 +76,17 @@ namespace Synthesis
         float _depth = 1.0f;
 
     public:
-        Phaser(SampleBuffer &phaserBuffer, SampleBuffer &lfoBuffer, SampleBuffer &allPassBuffer) : _lfoBuffer(lfoBuffer),
-                                                                                                   _allPass(lfoBuffer, allPassBuffer)
+        Phaser(SampleBuffer &phaserBuffer, SampleBuffer &lfoBuffer) : _lfoBuffer(lfoBuffer),
+                                                                      _allPass(lfoBuffer)
         {
         }
 
-        virtual void process(SampleBuffer &inputSignal, SampleBuffer &outputSignal)
+        virtual void process(const SampleBuffer &inputSignal, SampleBuffer &outputSignal)
         {
 
             _allPass.reset();
             _allPass.process(inputSignal, outputSignal);
-
-            auto bufferLength = inputSignal.length();
-            for (int n = 0; n < bufferLength; n++)
+            for (int n = 0; n < BufferLength; n++)
             {
                 outputSignal[n] = inputSignal[n] - outputSignal[n] * _depth;
             }

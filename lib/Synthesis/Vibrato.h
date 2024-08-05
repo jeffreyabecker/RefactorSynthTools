@@ -57,7 +57,6 @@ namespace Synthesis
         StaticSampleBuffer<BufferLength> _buffer;
         SampleBuffer &_modBuffer;
 
-        float _sample_rate;
         float _depth;
         float _depthInv;
 
@@ -66,13 +65,11 @@ namespace Synthesis
         int32_t _inCnt;
 
     public:
-        Vibrato(float sample_rate, SampleBuffer &modBuffer) : _sample_rate(sample_rate),
-                                                              _modBuffer(modBuffer)
+        Vibrato(SampleBuffer &modBuffer) : _modBuffer(modBuffer)
         {
             this->reset();
         }
-        Vibrato(float sample_rate) : : _sample_rate(sample_rate),
-                                       _modBuffer(_emptyModBuffer)
+        Vibrato() : _modBuffer(_emptyModBuffer)
         {
             this->reset();
         }
@@ -86,7 +83,7 @@ namespace Synthesis
             _buffer.clear();
         }
 
-        virtual void process(SampleBuffer &inputSignal, SampleBuffer &outputSignal)
+        virtual void process(const SampleBuffer &inputSignal, SampleBuffer &outputSignal)
         {
 
             if (_mod_multiplier_curr > _mod_multiplier)
@@ -97,23 +94,23 @@ namespace Synthesis
             {
                 _mod_multiplier_curr++;
             }
-            auto bufferSize = _buffer.length();
-            for (uint32_t n = 0; n < bufferSize; n++)
+
+            for (uint32_t n = 0; n < BufferLength; n++)
             {
                 float mod = (1.0f + _modBuffer[n]) * _mod_multiplier_curr;
                 int outCnt = _inCnt - mod;
                 if (outCnt < 0)
                 {
-                    outCnt += bufferSize;
+                    outCnt += BufferLength;
                 }
 
                 _buffer[_inCnt] = inputSignal[n];
                 outputSignal[n] = _depth * _buffer[outCnt] + _depthInv * inputSignal[n];
 
                 _inCnt++;
-                if (_inCnt >= bufferSize)
+                if (_inCnt >= BufferLength)
                 {
-                    _inCnt -= bufferSize;
+                    _inCnt -= BufferLength;
                 }
             }
         }

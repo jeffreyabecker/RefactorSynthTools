@@ -59,13 +59,13 @@ namespace Synthesis
         AllPass() : _p(0.0f), _g(0.00025f) {}
         AllPass(uint32_t p, uint32_t g, uint32_t lim) : _p(p), _g(g), _lim(lim) {}
 
-        virtual void process(SampleBuffer &inputSignal, SampleBuffer &outputSignal) override
+        virtual void process(const SampleBuffer &inputSignal, SampleBuffer &outputSignal) override
         {
             uint32_t copy_p;
             float copy_g;
             uint32_t copy_lim;
-            auto bufferLength = inputSignal.length();
-            for (int n = 0; n < bufferLength; n++)
+
+            for (int n = 0; n < BufferLength; n++)
             {
                 float readback = _buff[copy_p];
                 readback += (-copy_g) * inputSignal[n];
@@ -73,12 +73,6 @@ namespace Synthesis
                 _buff[copy_p] = newV;
                 copy_p++;
                 updateWorkingCopy(n, copy_p, copy_g, copy_lim);
-
-                // reverb uses almost exactly the same algorithm but with:
-                // if (ap2.p >= ap2.lim)
-                // {
-                //     ap2.p = 0;
-                // }
                 outputSignal[n] = readback;
             }
             _p = copy_p;

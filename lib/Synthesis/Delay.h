@@ -95,7 +95,7 @@ namespace Synthesis
             }
         }
 
-        virtual void process(SampleBuffer &inputSignal, SampleBuffer &outputSignal) override
+        virtual void process(const SampleBuffer &inputSignal, SampleBuffer &outputSignal) override
         {
             auto signalLength = inputSignal.length();
             auto bufferLength = _buffer.length();
