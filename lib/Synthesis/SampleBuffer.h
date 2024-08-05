@@ -30,14 +30,14 @@ namespace Synthesis
     };
 
     template <size_t BufferLength>
-    class FixedSampleBuffer : public SampleBuffer
+    class StaticSampleBuffer : public SampleBuffer
     {
     protected:
         float[BufferLength] _samples;
 
     public:
-        FixedSampleBuffer() {}
-        FixedSampleBuffer(const SampleBuffer &that)
+        StaticSampleBuffer() {}
+        StaticSampleBuffer(const SampleBuffer &that)
         {
             auto thatLength = that.length();
             for (size_t i = 0; i < thatLength && i < BufferLength; i++)

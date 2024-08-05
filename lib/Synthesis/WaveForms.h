@@ -54,98 +54,125 @@ namespace Synthesis
             virtual float at(size_t offset) = 0;
         };
 
-    };
-
-    template <size_t BitLength>
-    class DynamicWaveForm : public WaveForm, public SampleBuffer
-    {
-    private:
-    protected:
-        float _bogusSampleForReturnFromOperator;
-        virtual float generateValue(size_t index) = 0;
-
-    public:
-        DynamicWaveForm() {}
-        virtual float at(size_t offset) override
+        template <size_t BitLength>
+        class DynamicWaveForm : public WaveForm, public SampleBuffer
         {
-            return _samples[(((offset) >> (32 - BitLength)) & ((1 << BitLength) - 1))];
-        }
-        virtual size_t length() override { return (1 << BitLength); };
-        virtual float &operator[](size_t index) override
-        {
-            _bogusSampleForReturnFromOperator = generateValue(index);
-            return _bogusSampleForReturnFromOperator;
-        }
-        virtual void clear() override {}
-    };
+        protected:
+            float _bogusSampleForReturnFromOperator;
+            const size_t BufferLength = (1 << BitLength);
+            virtual float generateValue(size_t index) = 0;
 
-    template <size_t BitLength>
-    class PrecalculatedWaveForm : public FixedSampleBuffer<(1 << BitLength)>, WaveForm
-    {
-    protected:
-        const size_t Mask = ((1 << BitLength) - 1);
-        const size_t BufferLength = (1 << BitLength);
-
-    public:
-        FixedWaveForm(DynamicWaveForm<BitLength> dynamicForm)
-        {
-            for (size_t i = 0; i < BufferLength; i++)
+        public:
+            DynamicWaveForm() {}
+            virtual float at(size_t offset) override
             {
-                (this->operator[])(i) = dynamicForm[i];
+                return (this->operator[])(((offset) >> (32 - BitLength)) & (BufferLength - 1));
             }
-        }
-        virtual float at(size_t offset) override
+            virtual size_t length() override { return BufferLength; };
+            virtual float &operator[](size_t index) override
+            {
+                _bogusSampleForReturnFromOperator = generateValue(index);
+                return _bogusSampleForReturnFromOperator;
+            }
+            virtual void clear() override {}
+        };
+
+        template <size_t BitLength>
+        class StaticWaveForm : public StaticSampleBuffer<(1 << BitLength)>, WaveForm
         {
-            return _samples[(((offset) >> (32 - BitLength)) & Mask)];
-        }
-    };
+        protected:
+            const size_t Mask = ((1 << BitLength) - 1);
+            const size_t BufferLength = (1 << BitLength);
 
-    template <size_t BitLength>
-    class SineWaveForm : public DynamicWaveForm
-    {
-    protected:
-        virtual float generateValue(size_t index) override { return (float)sin(i * 2.0 * M_PI / BufferLength); }
-    };
+        public:
+            StaticWaveForm(DynamicWaveForm<BitLength> dynamicForm)
+            {
+                for (size_t i = 0; i < BufferLength; i++)
+                {
+                    (this->operator[])(i) = dynamicForm[i];
+                }
+            }
+            virtual float at(size_t offset) override
+            {
+                return _samples[(((offset) >> (32 - BitLength)) & Mask)];
+            }
+        };
 
-    template <size_t BitLength>
-    class SawToothWaveForm : public DynamicWaveForm
-    {
-    protected:
-        virtual float generateValue(size_t index) override { return (2.0f * ((float)index) / ((float)BufferLength)) - 1.0f; }
-    };
+        template <size_t BitLength>
+        class SineWaveForm : public DynamicWaveForm<BitLength>
+        {
+        protected:
+            virtual float generateValue(size_t index) override { return (float)sin(i * 2.0 * M_PI / BufferLength); }
+        };
 
-    template <size_t BitLength>
-    class SquareWaveForm : public DynamicWaveForm
-    {
-    protected:
-        virtual float generateValue(size_t index) override { return (index > (BufferLength / 2)) ? 1 : -1; }
-    };
+        template <size_t BitLength>
+        class SawToothWaveForm : public DynamicWaveForm<BitLength>
+        {
+        protected:
+            virtual float generateValue(size_t index) override { return (2.0f * ((float)index) / ((float)BufferLength)) - 1.0f; }
+        };
 
-    template <size_t BitLength>
-    class PulseWaveForm : public DynamicWaveForm
-    {
-    protected:
-        virtual float generateValue(size_t index) override { return (index > (BufferLength / 4)) ? 1.0f / 4.0f : -3.0f / 4.0f; }
-    };
+        template <size_t BitLength>
+        class SquareWaveForm : public DynamicWaveForm<BitLength>
+        {
+        protected:
+            virtual float generateValue(size_t index) override { return (index > (BufferLength / 2)) ? 1 : -1; }
+        };
 
-    template <size_t BitLength>
-    class TriangleWaveForm : public DynamicWaveForm
-    {
-    protected:
-        virtual float generateValue(size_t index) override { return ((index > (BufferLength / 2)) ? (((4.0f * (float)index) / ((float)BufferLength)) - 1.0f) : (3.0f - ((4.0f * (float)index) / ((float)BufferLength)))) - 2.0f; }
-    };
+        template <size_t BitLength>
+        class PulseWaveForm : public DynamicWaveForm<BitLength>
+        {
+        protected:
+            virtual float generateValue(size_t index) override { return (index > (BufferLength / 4)) ? 1.0f / 4.0f : -3.0f / 4.0f; }
+        };
 
-    template <size_t BitLength>
-    class NoiseWaveForm : public DynamicWaveForm
-    {
-    protected:
-        virtual float generateValue(size_t index) override { return ((rand() % (1024)) / 512.0f) - 1.0f; }
-    };
+        template <size_t BitLength>
+        class TriangleWaveForm : public DynamicWaveForm<BitLength>
+        {
+        protected:
+            virtual float generateValue(size_t index) override { return ((index > (BufferLength / 2)) ? (((4.0f * (float)index) / ((float)BufferLength)) - 1.0f) : (3.0f - ((4.0f * (float)index) / ((float)BufferLength)))) - 2.0f; }
+        };
 
-    template <size_t BitLength>
-    class SilenceWaveForm : public DynamicWaveForm<BitLength>
-    {
-    protected:
-        virtual float generateValue(size_t index) override { reutrn 0; }
-    };
+        template <size_t BitLength>
+        class NoiseWaveForm : public DynamicWaveForm<BitLength>
+        {
+        protected:
+            virtual float generateValue(size_t index) override { return ((rand() % (1024)) / 512.0f) - 1.0f; }
+        };
+
+        class SilenceWaveForm : public WaveForm
+        {
+        public:
+            virtual float at(size_t offset) override { return 0; }
+        };
+
+        SilenceWaveForm Silence();
+
+#ifdef WAVEFORM_BIT_LENGTH
+
+#ifdef STATIC_WAVEFORM_SINE
+        StaticWaveForm<WAVEFORM_BIT_LENGTH> Sine(SineWaveForm<WAVEFORM_BIT_LENGTH>());
+#endif // STATIC_WAVEFORM_SINE
+
+#ifdef STATIC_WAVEFORM_SAW_TOOTH
+        StaticWaveForm<WAVEFORM_BIT_LENGTH> SawTooth(SawToothWaveForm<WAVEFORM_BIT_LENGTH>());
+#endif // STATIC_WAVEFORM_SAW_TOOTH
+
+#ifdef STATIC_WAVEFORM_SQUARE
+        StaticWaveForm<WAVEFORM_BIT_LENGTH> Square(SquareWaveForm<WAVEFORM_BIT_LENGTH>());
+#endif // STATIC_WAVEFORM_SQUARE
+
+#ifdef STATIC_WAVEFORM_PULSE
+        StaticWaveForm<WAVEFORM_BIT_LENGTH> Pulse(PulseWaveForm<WAVEFORM_BIT_LENGTH>());
+#endif // STATIC_WAVEFORM_PULSE
+
+#ifdef STATIC_WAVEFORM_TRIANGLE
+        StaticWaveForm<WAVEFORM_BIT_LENGTH> Triangle(TriangleWaveForm<WAVEFORM_BIT_LENGTH>());
+#endif // STATIC_WAVEFORM_TRIANGLE
+
+#ifdef STATIC_WAVEFORM_NOISE
+        StaticWaveForm<WAVEFORM_BIT_LENGTH> Noise(NoiseWaveForm<WAVEFORM_BIT_LENGTH>());
+#endif // STATIC_WAVEFORM_NOISE
+#endif // defined(WAVEFORM_BIT_LENGTH)
+    }
 }

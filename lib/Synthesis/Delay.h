@@ -50,7 +50,7 @@ namespace Synthesis
     class Delay : public SignalTransformation
     {
     protected:
-        FixedSampleBuffer<BufferLength> _buffer;
+        StaticSampleBuffer<BufferLength> _buffer;
         float _outputLevel = 0;
         float _inputLevel = 1.0f;
         float _delayFeedback = 0;

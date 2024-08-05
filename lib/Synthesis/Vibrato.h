@@ -54,7 +54,7 @@ namespace Synthesis
     {
     private:
         static FixedValueSampleBuffer<BufferLength> _emptyModBuffer(0.0f);
-        FixedSampleBuffer<BufferLength> _buffer;
+        StaticSampleBuffer<BufferLength> _buffer;
         SampleBuffer &_modBuffer;
 
         float _sample_rate;

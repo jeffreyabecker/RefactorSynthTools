@@ -29,65 +29,58 @@
  */
 
 /**
- * @file ml_tremolo.h
+ * @file ml_phaser.h
  * @author Marcel Licence
- * @date 08.12.2022
+ * @date 20.12.2022
  *
- * @brief   Tremolo stereo implementation
+ * @brief This file contains an implementation of a simple stereo phaser effect
  *
- * @see little demo: https://youtu.be/zu2xtRKlNVU
+ * @see first peak: https://youtu.be/Kac9AB02BcQ
+ * @see little demo: https://youtu.be/hqK_U22Jha8
  */
 
-
-#ifndef SRC_ML_TREMOLO_H_
-#define SRC_ML_TREMOLO_H_
-
-
+#pragma once
 #include <stdint.h>
-#include <math.h>
-
-
-
-#include <stdint.h>
-
-
-class ML_Tremolo
+#include "SampleBuffer.h"
+#include "SignalTransformation.h"
+namespace Synthesis
 {
-public:
-    ML_Tremolo(float sample_rate);
-    ~ML_Tremolo() {};
-    void Process(const float *in_l, const float *in_r, const float mod_in, float *out_l, float *out_r, uint32_t count);
-    void Process(const float *in_l, const float *in_r, const float *mod_in, float *out_l, float *out_r, uint32_t count);
-    void process(float *left, float *right, int32_t len);
-    void setSpeed(float speed);
-    void setPhaseShift(float shift);
-    void setDepth(float new_depth);
+    template <size_t CombBufferLength>
+    class Comb : public SignalTransformation
+    {
+    private:
+        StaticSampleBuffer<CombBufferLength> buffer;
+        int _p;
+        float _g;
+        int _lim;
 
-private:
-    float sample_rate;
-    float speed;
-    float phase_shift;
-    float value;
-    float depth;
-    float depthInv;
-
-    uint32_t speedU32;
-    uint32_t valueU32;
-};
-
-
-class ML_TremoloQ
-{
-public:
-    ML_TremoloQ() {};
-    ~ML_TremoloQ() {};
-    void init(float sample_rate);
-    void process(Q1_14 *left, Q1_14 *right, uint32_t len);
-    void setSpeed(float speed);
-    void setPhaseShift(float shift);
-    void updatePhaseShift();
-    void setDepth(float new_depth);
-};
-
-
-#endif /* SRC_ML_TREMOLO_H_ */
+    public:
+        Comb(int p, float g, int lim) : _p(p),
+                                        _g(g),
+                                        _lim(lim)
+        {
+        }
+        virtual void process(SampleBuffer &inputSignal, SampleBuffer &outputSignal) override
+        {
+            int copy_p = _p;
+            float copy_g = _g;
+            int copy_lim = _lim;
+            for (int n = 0; n < buffLen; n++)
+            {
+                const float readback = buffer[copy_p];
+                const float newV = readback * copy_g + inputSample[n];
+                buffer[copy_p] = newV;
+                copy_p++;
+                if (copy_p >= copy_lim)
+                {
+                    copy_p = 0;
+                }
+                outputSample[n] += readback;
+            }
+            _p = copy_p;
+            _g = copy_g;
+            _lim = copy_lim;
+        }
+        virtual void reset() {}
+    };
+}

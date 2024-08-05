@@ -49,7 +49,7 @@ namespace Synthesis
     class AllPass : public SignalTransformation
     {
     protected:
-        FixedSampleBuffer<BufferLength> _buff;
+        StaticSampleBuffer<BufferLength> _buff;
         uint32_t _p;
         float _g;
         uint32_t _lim;

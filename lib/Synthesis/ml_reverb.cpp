@@ -109,24 +109,7 @@ static struct comb_s cf3 =
     (int)(rev_time * l_CB3),
 };
 
-static inline void Do_Comb(struct comb_s *cf, const float *inSample, float *outSample, int buffLen)
-{
-    struct comb_s cf2;
-    memcpy(&cf2, cf, sizeof(cf2));
-    for (int n = 0; n < buffLen; n++)
-    {
-        const float readback = cf2.buf[cf2.p];
-        const float newV = readback * cf2.g + inSample[n];
-        cf2.buf[cf2.p] = newV;
-        cf2.p++;
-        if (cf2.p >= cf2.lim)
-        {
-            cf2.p = 0;
-        }
-        outSample[n] += readback;
-    }
-    memcpy(cf, &cf2, sizeof(cf2));
-}
+
 
 struct allpass_s
 {
@@ -218,12 +201,7 @@ void Reverb_Process(const float *signal_l, float *out, int buffLen)
     }
 }
 
-static int CombInit(float *buffer, int i, struct comb_s *cf, int len)
-{
-    cf->buf = &buffer[i];
-    cf->lim = (int)(rev_time * len);
-    return len;
-}
+
 
 static int AllpassInit(float *buffer, int i, struct allpass_s *ap, int len)
 {
