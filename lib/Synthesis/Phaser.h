@@ -43,11 +43,11 @@
 #include "AllPass.h"
 namespace Synthesis
 {
-    template <size_t BufferLength>
+    template <size_t BufferLength = 48>
     class Phaser : public SignalTransformation
     {
     private:
-        class PhaserAllPass : public AllPass<BufferLength>
+        class PhaserAllPass : public AllPass
         {
         protected:
             SampleBuffer &_lfoBuffer;

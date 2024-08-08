@@ -3,7 +3,7 @@
 namespace Synthesis
 {
 
-    template <size_t BufferLength>
+    template <size_t BufferLength = 48>
     class SampleBuffer
     {
 
@@ -19,15 +19,39 @@ namespace Synthesis
         }
         virtual void copyTo(SampleBuffer &that)
         {
-
             for (size_t i = 0; i < BufferLength; i++)
             {
                 that[i] = (this->operator[])(i);
             }
         }
     };
+    template <size_t BufferLength = 48>
+    class StereoSampleBuffer
+    {
+    protected:
+        SampleBuffer &_left;
+        SampleBuffer &_right;
 
-    template <size_t BufferLength>
+    public:
+        StereoSampleBuffer(SampleBuffer &l, SampleBuffer &r) : _left(l), _right(r)
+        {
+        }
+        size_t length() { return BufferLength; }
+        void clear()
+        {
+            _left.clear();
+            _right.clear();
+        }
+        void copyTo(StereoSampleBuffer &that)
+        {
+            _left.copyTo(that.left);
+            _right.copyTo(that.right);
+        }
+        SampleBuffer &left() { return _left; }
+        SampleBuffer &right() { return _right; }
+    };
+
+    template <size_t BufferLength = 48>
     class StaticSampleBuffer : public SampleBuffer<BufferLength>
     {
     protected:
@@ -41,8 +65,18 @@ namespace Synthesis
             return _samples[index];
         }
     };
+    template <size_t BufferLength = 48>
+    class StaticStereoSampleBuffer : public StereoSampleBuffer
+    {
+    private:
+        StaticSampleBuffer staticLeft;
+        StaticSampleBuffer staticRight;
 
-    template <size_t BufferLength>
+    public:
+        StaticStereoSampleBuffer() : _left(staticLeft), _right(staticRight) {}
+    };
+
+    template <size_t BufferLength = 48>
     class ReadOnlySampleBuffer : public SampleBuffer<BufferLength>
     {
     private:
@@ -64,7 +98,7 @@ namespace Synthesis
         }
     };
 
-    template <size_t BufferLength>
+    template <size_t BufferLength = 48>
     class FixedValueSampleBuffer : public SampleBuffer<BufferLength>
     {
     private:

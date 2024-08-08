@@ -46,7 +46,7 @@
 #include "math.h"
 namespace Synthesis
 {
-    template <size_t BufferLength>
+    template <size_t BufferLength = 48>
     class LowFrequencyOscillator : public SignalTransformation
     {
     private:

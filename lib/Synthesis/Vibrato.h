@@ -49,7 +49,7 @@
 
 namespace Synthesis
 {
-    template <size_t BufferLength>
+    template <size_t BufferLength = 48>
     class Vibrato : public SignalTransformation
     {
     private:

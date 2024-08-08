@@ -53,27 +53,32 @@ namespace Synthesis
     class AdsrEnvelope
     {
     protected:
-        float _cfg_sample_rate;
-        float _cfg_attack;
-        float _cfg_decay;
-        float _cfg_sustain;
-        float _cfg_release;
-        float _cfg_w;
+        float _attack;
+        float _decay;
+        float _sustain;
+        float _release;
+        float _w;
         float _sample_rate;
         float _ctrl;
         EnvelopePhase _phase;
 
     public:
+        AdsrEnvelope(float attack, float decay, float sustain, float release) : _attack(attack),
+                                                                                _decay(decay),
+                                                                                _sustain(sustain),
+                                                                                _release(release)
+        {
+        }
         /*
          * very bad and simple implementation of ADSR
          * - but it works for the start
          */
-        virtual bool process(/*const struct adsrT *ctrl, struct adsr_cfg_t *adsr*/)
+        virtual bool process(/*const struct adsrT *ctrl, struct adsr_t *adsr*/)
         {
             switch (_phase)
             {
             case EnvelopePhase::attack:
-                _ctrl += _cfg_attack;
+                _ctrl += _attack;
                 if (_ctrl > 1.0f)
                 {
                     _ctrl = 1.0f;
@@ -81,17 +86,17 @@ namespace Synthesis
                 }
                 break;
             case EnvelopePhase::decay:
-                _ctrl -= _cfg_decay;
-                if (_ctrl < _cfg_sustain)
+                _ctrl -= _decay;
+                if (_ctrl < _sustain)
                 {
-                    _ctrl = _cfg_sustain;
+                    _ctrl = _sustain;
                     _phase = EnvelopePhase::sustain;
                 }
                 break;
             case EnvelopePhase::sustain:
                 break;
             case EnvelopePhase::release:
-                _ctrl -= _cfg_release;
+                _ctrl -= _release;
                 if (_ctrl < 0.0f)
                 {
                     _ctrl = 0.0f;
@@ -101,10 +106,10 @@ namespace Synthesis
             return true;
         }
 
-        void start(const struct adsrT *ctrl, struct adsr_cfg_t *adsr)
+        void start(const struct adsrT *ctrl, struct adsr_t *adsr)
         {
-            _ctrl = _cfg_attack;
-            if (_cfg_attack == 1.0f) /* not sure if that check is necessary */
+            _ctrl = _attack;
+            if (_attack == 1.0f) /* not sure if that check is necessary */
             {
                 _phase = EnvelopePhase::decay;
             }
@@ -119,12 +124,18 @@ namespace Synthesis
     {
 
     public:
+        AsmrEnvelope(float attack, float decay, float sustain, float release) : _attack(attack),
+                                                                                _decay(decay),
+                                                                                _sustain(sustain),
+                                                                                _release(release)
+        {
+        }
         virtual bool process() override
         {
             switch (_phase)
             {
             case EnvelopePhase::attack:
-                _ctrl += _cfg_attack;
+                _ctrl += _attack;
                 if (_ctrl > 1.0f)
                 {
                     _ctrl = 1.0f;
@@ -132,7 +143,7 @@ namespace Synthesis
                 }
                 break;
             case EnvelopePhase::decay:
-                _ctrl -= _cfg_decay;
+                _ctrl -= _decay;
                 if (_ctrl < 0)
                 {
                     _ctrl = 0;
@@ -142,7 +153,7 @@ namespace Synthesis
             case EnvelopePhase::sustain:
                 break;
             case EnvelopePhase::release:
-                _ctrl -= _cfg_release;
+                _ctrl -= _release;
                 if (_ctrl < 0.0f)
                 {
                     _ctrl = 0.0f;

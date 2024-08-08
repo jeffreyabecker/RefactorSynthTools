@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Marcel Licence
+ * Copyright (c) 2022 Marcel Licence
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,42 +29,54 @@
  */
 
 /**
- * @file ml_chorus.h
+ * @file easySynth.ino
  * @author Marcel Licence
- * @date 20.12.2022
+ * @date 17.12.2021
  *
- * @brief This file contains the declarations of a simple stereo chorus effect
- *
- * @see little demo: https://youtu.be/ZIiSp7yM6o8
+ * @brief   This file contains a simple implementation for a polyphonic synthesizer
  */
 
+#include <stdint.h>
+#include "../lib/Synthesis.h"
+#include "../lib/Midi.h"
 
-#ifndef SRC_ML_CHORUS_H_
-#define SRC_ML_CHORUS_H_
-
-
-
-
-
-void Chorus_Init(int16_t *buffer, uint32_t len);
-
-void Chorus_Reset(void);
-void Chorus_Process_Buff(float *signal_l, int buffLen);
-
-void Chorus_Process_Buff(float *in, float *left, float *right, int buffLen);
-void Chorus_Process_Buff(int16_t *in, int16_t *left, int16_t *right, int buffLen);
-void Chorus_Process_Buff(Q1_14 *in, Q1_14 *left, Q1_14 *right, int buffLen);
-void Chorus_Process_Buff2(float *signal_l, float *signal_r, int buffLen);
-void Chorus_SetupDefaultPreset(float value);
-void Chorus_SetInputLevel(float value);
-void Chorus_SetThrough(float value);
-void Chorus_SetDelay(float value);
-void Chorus_SetPhaseShift(float value);
-void Chorus_SetDepth(float value);
-void Chorus_SetOutputLevel(float value);
-void Chorus_SetLength(float value);
-void Chorus_SetSpeed(float value);
+#pragma once
 
 
-#endif /* SRC_ML_CHORUS_H_ */
+template <size_t BufferLength = 48>
+class NotePlayer
+{
+    Synthesis::StereoSampleBuffer& buffer;
 
+    float velocity;
+    bool active;
+    // adsr_phaseT phase;
+
+    uint8_t midiCh;
+    uint8_t midiNote;
+
+    // float control_sign;
+    float out_level;
+
+    float pitch_mod;
+
+    float morph; /* current morph value per voice */
+
+    
+    Synthesis::Filter filterL;
+    Synthesis::Filter filterR;
+
+
+    float f_control_sign_slow;
+
+    Synthesis::AdsrEnvelope _volume;
+    Synthesis::AdsrEnvelope _filter;
+    Synthesis::AdsrEnvelope _pitch;
+    Synthesis::AsmrEnvelope _modulation
+    Synthesis::AsmrEnvelope _modulationF;
+    Synthesis::AsmrEnvelope _mph;
+
+
+
+    struct ChannelSetting& cfg;
+};

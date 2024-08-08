@@ -49,8 +49,8 @@
 namespace Synthesis
 {
 
-    template <size_t BufferLength>
-    class PitchShifter
+    template <size_t BufferLength = 48>
+    class PitchShifter : public SignalTransformation
     {
     private:
         float _depth;
@@ -129,6 +129,7 @@ namespace Synthesis
                 }
             }
         }
+        virtual void reset() override {}
 
         void setDepth(float depth)
         {

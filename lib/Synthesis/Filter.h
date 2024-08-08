@@ -48,54 +48,21 @@
 #include "SignalTransformation.h"
 namespace Synthesis
 {
-    template <size_t BufferLength>
-    class Filter : public SignalTransformation
+    class FilterCoefficent
     {
     protected:
-        static WaveForms::WaveForm *_sine;
         float _bNorm[3];
         float _aNorm[2];
-        float _w[2];
 
     public:
-        static void InitSine(WaveForms::WaveForm *&sine)
-        {
-            _sine = sine;
-        }
-        virtual void reset() override
-        {
-            _w[0] = 0.0;
-            _w[1] = 0.0;
-        }
-
-        virtual void process(const SampleBuffer &inputSignal, SampleBuffer &outputSignal) override
-        {
-            auto len = inputSignal.length();
-            for (size_t n = 0; n < len; n++)
-            {
-                const float out = _bNorm[0] * inputSignal[n] + _w[0];
-                _w[0] = _bNorm[1] * inputSignal[n] - _aNorm[0] * out + _w[1];
-                _w[1] = _bNorm[2] * inputSignal[n] - _aNorm[1] * out;
-                outputSignal[n] = out;
-            }
-        }
-
-        float amplitudeResponse(float c)
-        {
-            float omega = c;
-            float cosOmega = (*_sine).at((size_t)((float)((1ULL << 31) - 1) * omega + (float)((1ULL << 30) - 1)));
-            float cos2Omega = (*_sine).at((size_t)((float)((1ULL << 31) - 1) * 2 * omega + (float)((1ULL << 30) - 1)));
-
-            return sqrt(
-                (_aNorm[0] * _aNorm[0]) * (2 + ((_aNorm[1] / _aNorm[0]) * (_aNorm[1] / _aNorm[0])) + 4 * (_aNorm[1] / _aNorm[0]) * cosOmega * 2 * cos2Omega) / (1 + (_bNorm[1] * _bNorm[1]) + (_bNorm[2] * _bNorm[2]) + 2 * _bNorm[1] * (1 + _bNorm[2]) * cosOmega + 2 * _bNorm[2] * cos2Omega));
-        }
+        inline float aNorm(uint8_t idx) { return _aNorm[idx]; }
+        inline float bNorm(uint8_t idx) { return _bNorm[idx]; }
     };
 
-    template <size_t BufferLength>
-    class LowPassFilter : public Filter
+    class LowPassFilterCoefficent : public FilterCoefficent
     {
     public:
-        LowPassFilter(float c, float reso)
+        LowPassFilterCoefficent(float c, float reso, WaveForms::WaveForm *sine)
         {
             /*
              * calculate coefficients of the 2nd order IIR filter
@@ -125,8 +92,8 @@ namespace Synthesis
             /*
              * use lookup here to get quicker results
              */
-            cosOmega = (*_sine).at((size_t)((float)((1ULL << 31) - 1) * omega + (float)((1ULL << 30) - 1)));
-            sinOmega = (*_sine).at((size_t)((float)((1ULL << 31) - 1) * omega));
+            cosOmega = sine->at((size_t)((float)((1ULL << 31) - 1) * omega + (float)((1ULL << 30) - 1)));
+            sinOmega = sine->at((size_t)((float)((1ULL << 31) - 1) * omega));
 
             alpha = sinOmega / (2.0 * Q);
             b[0] = (1 - cosOmega) / 2;
@@ -144,18 +111,16 @@ namespace Synthesis
             _bNorm[0] = b[0] * factor;
             _bNorm[1] = b[1] * factor;
             _bNorm[2] = b[2] * factor;
-            _w[0] = 0;
-            _w[1] = 0;
         }
     };
-    template <size_t BufferLength>
-    class NotchFilter : public Filter
+
+    class NotchFilter : public FilterCoefficent
     {
         /*
          * @see https://www.atlantis-press.com/article/5887.pdf
          */
     public:
-        NotchFilter(float c)
+        NotchFilter(float c, WaveForms::WaveForm *sine)
         {
 
             float cosOmega, omega, a[3], b[3];
@@ -183,7 +148,7 @@ namespace Synthesis
             /*
              * use lookup here to get quicker results
              */
-            cosOmega = (*_sine).at((size_t)((float)((1ULL << 31) - 1) * omega + (float)((1ULL << 30) - 1)));
+            cosOmega = sine->at((size_t)((float)((1ULL << 31) - 1) * omega + (float)((1ULL << 30) - 1)));
 
             b[0] = 1;
             b[1] = -2 * cosOmega;
@@ -201,6 +166,32 @@ namespace Synthesis
             _bNorm[0] = b[0] * factor;
             _bNorm[1] = b[1] * factor;
             _bNorm[2] = b[2] * factor;
+        }
+    };
+
+    template <size_t BufferLength = 48>
+    class Filter : public SignalTransformation
+    {
+    protected:
+        FilterCoefficent &_coefficent float _w[2];
+
+    public:
+        virtual void reset() override
+        {
+            _w[0] = 0.0;
+            _w[1] = 0.0;
+        }
+
+        virtual void process(const SampleBuffer &inputSignal, SampleBuffer &outputSignal) override
+        {
+
+            for (size_t n = 0; n < BufferLength; n++)
+            {
+                const float out = _coeffcient.bNorm(0) * inputSignal[n] + _w[0];
+                _w[0] = _coeffcient.bNorm(1) * inputSignal[n] - _coeffcient.aNorm(0) * out + _w[1];
+                _w[1] = _coeffcient.bNorm(2) * inputSignal[n] - _coeffcient.aNorm(1) * out;
+                outputSignal[n] = out;
+            }
         }
     };
 

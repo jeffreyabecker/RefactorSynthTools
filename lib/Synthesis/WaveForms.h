@@ -54,30 +54,21 @@ namespace Synthesis
             virtual float at(size_t offset) = 0;
         };
 
-        template <size_t BitLength>
-        class DynamicWaveForm : public WaveForm, public SampleBuffer
+        template <size_t BitLength = 10>
+        class DynamicWaveForm : public WaveForm
         {
         protected:
-            float _bogusSampleForReturnFromOperator;
             const size_t BufferLength = (1 << BitLength);
-            virtual float generateValue(size_t index) = 0;
 
         public:
-            DynamicWaveForm() {}
+            virtual float generateValue(size_t index) = 0;
             virtual float at(size_t offset) override
             {
-                return (this->operator[])(((offset) >> (32 - BitLength)) & (BufferLength - 1));
+                return generateValue(((offset) >> (32 - BitLength)) & (BufferLength - 1));
             }
-            virtual size_t length() override { return BufferLength; };
-            virtual float &operator[](size_t index) override
-            {
-                _bogusSampleForReturnFromOperator = generateValue(index);
-                return _bogusSampleForReturnFromOperator;
-            }
-            virtual void clear() override {}
         };
 
-        template <size_t BitLength>
+        template <size_t BitLength = 10>
         class StaticWaveForm : public StaticSampleBuffer<(1 << BitLength)>, WaveForm
         {
         protected:
@@ -89,7 +80,7 @@ namespace Synthesis
             {
                 for (size_t i = 0; i < BufferLength; i++)
                 {
-                    (this->operator[])(i) = dynamicForm[i];
+                    (this->operator[])(i) = dynamicForm.generateValue(i);
                 }
             }
             virtual float at(size_t offset) override
@@ -98,42 +89,42 @@ namespace Synthesis
             }
         };
 
-        template <size_t BitLength>
+        template <size_t BitLength = 10>
         class SineWaveForm : public DynamicWaveForm<BitLength>
         {
         protected:
             virtual float generateValue(size_t index) override { return (float)sin(i * 2.0 * M_PI / BufferLength); }
         };
 
-        template <size_t BitLength>
+        template <size_t BitLength = 10>
         class SawToothWaveForm : public DynamicWaveForm<BitLength>
         {
         protected:
             virtual float generateValue(size_t index) override { return (2.0f * ((float)index) / ((float)BufferLength)) - 1.0f; }
         };
 
-        template <size_t BitLength>
+        template <size_t BitLength = 10>
         class SquareWaveForm : public DynamicWaveForm<BitLength>
         {
         protected:
             virtual float generateValue(size_t index) override { return (index > (BufferLength / 2)) ? 1 : -1; }
         };
 
-        template <size_t BitLength>
+        template <size_t BitLength = 10>
         class PulseWaveForm : public DynamicWaveForm<BitLength>
         {
         protected:
             virtual float generateValue(size_t index) override { return (index > (BufferLength / 4)) ? 1.0f / 4.0f : -3.0f / 4.0f; }
         };
 
-        template <size_t BitLength>
+        template <size_t BitLength = 10>
         class TriangleWaveForm : public DynamicWaveForm<BitLength>
         {
         protected:
             virtual float generateValue(size_t index) override { return ((index > (BufferLength / 2)) ? (((4.0f * (float)index) / ((float)BufferLength)) - 1.0f) : (3.0f - ((4.0f * (float)index) / ((float)BufferLength)))) - 2.0f; }
         };
 
-        template <size_t BitLength>
+        template <size_t BitLength = 10>
         class NoiseWaveForm : public DynamicWaveForm<BitLength>
         {
         protected:
@@ -146,33 +137,62 @@ namespace Synthesis
             virtual float at(size_t offset) override { return 0; }
         };
 
-        SilenceWaveForm Silence();
+        template <size_t BitLength = 10>
+        class All
+        {
+        private:
+            static SilenceWaveForm _silence();
 
-#ifdef WAVEFORM_BIT_LENGTH
+#if defined(USE_STATIC_WAVEFORM_SINE)
+            static StaticWaveForm<BitLength> _sine(SineWaveForm<BitLength>());
+#endif // defined(USE_STATIC_WAVEFORM_SINE)
+#if !defined(USE_STATIC_WAVEFORM_SINE)
+            static SineWaveForm<BitLength> _sine();
+#endif // !defined(USE_STATIC_WAVEFORM_SINE)
 
-#ifdef STATIC_WAVEFORM_SINE
-        StaticWaveForm<WAVEFORM_BIT_LENGTH> Sine(SineWaveForm<WAVEFORM_BIT_LENGTH>());
-#endif // STATIC_WAVEFORM_SINE
+#if defined(USE_STATIC_WAVEFORM_SAW_TOOTH)
+            static StaticWaveForm<BitLength> _sawTooth(SawToothWaveForm<BitLength>());
+#endif // defined(USE_STATIC_WAVEFORM_SAW_TOOTH)
+#if !defined(USE_STATIC_WAVEFORM_SAW_TOOTH)
+            static SawToothWaveForm<BitLength> _sawTooth();
+#endif // !defined(USE_STATIC_WAVEFORM_SAW_TOOTH)
 
-#ifdef STATIC_WAVEFORM_SAW_TOOTH
-        StaticWaveForm<WAVEFORM_BIT_LENGTH> SawTooth(SawToothWaveForm<WAVEFORM_BIT_LENGTH>());
-#endif // STATIC_WAVEFORM_SAW_TOOTH
+#if defined(USE_STATIC_WAVEFORM_SQUARE)
+            static StaticWaveForm<BitLength> _square(SquareWaveForm<BitLength>());
+#endif // defined(USE_STATIC_WAVEFORM_SQUARE)
+#if !defined(USE_STATIC_WAVEFORM_SQUARE)
+            static SquareWaveForm<BitLength> _square();
+#endif // !defined(USE_STATIC_WAVEFORM_SQUARE)
 
-#ifdef STATIC_WAVEFORM_SQUARE
-        StaticWaveForm<WAVEFORM_BIT_LENGTH> Square(SquareWaveForm<WAVEFORM_BIT_LENGTH>());
-#endif // STATIC_WAVEFORM_SQUARE
+#if defined(USE_STATIC_WAVEFORM_PULSE)
+            static StaticWaveForm<BitLength> _pulse(PulseWaveForm<BitLength>());
+#endif // defined(USE_STATIC_WAVEFORM_PULSE)
+#if !defined(USE_STATIC_WAVEFORM_PULSE)
+            static PulseWaveForm<BitLength> _pulse();
+#endif // !defined(USE_STATIC_WAVEFORM_PULSE)
 
-#ifdef STATIC_WAVEFORM_PULSE
-        StaticWaveForm<WAVEFORM_BIT_LENGTH> Pulse(PulseWaveForm<WAVEFORM_BIT_LENGTH>());
-#endif // STATIC_WAVEFORM_PULSE
+#if defined(USE_STATIC_WAVEFORM_TRIANGLE)
+            static StaticWaveForm<BitLength> _triangle(TriangleWaveForm<BitLength>());
+#endif // defined(USE_STATIC_WAVEFORM_TRIANGLE)
+#if !defined(USE_STATIC_WAVEFORM_TRIANGLE)
+            static TriangleWaveForm<BitLength> _triangle();
+#endif // !defined(USE_STATIC_WAVEFORM_TRIANGLE)
 
-#ifdef STATIC_WAVEFORM_TRIANGLE
-        StaticWaveForm<WAVEFORM_BIT_LENGTH> Triangle(TriangleWaveForm<WAVEFORM_BIT_LENGTH>());
-#endif // STATIC_WAVEFORM_TRIANGLE
+#if defined(USE_STATIC_WAVEFORM_NOISE)
+            static StaticWaveForm<BitLength> _noise(NoiseWaveForm<BitLength>());
+#endif // defined(USE_STATIC_WAVEFORM_NOISE)
+#if !defined(USE_STATIC_WAVEFORM_NOISE)
+            static NoiseWaveForm<BitLength> _noise();
+#endif // !defined(USE_STATIC_WAVEFORM_NOISE)
+        public:
+            static WaveForm &silence() { return _silence; }
+            static WaveForm &sine() { return _sine; }
+            static WaveForm &sawTooth() { return _sawTooth; }
+            static WaveForm &square() { return _square; }
+            static WaveForm &pulse() { return _pulse; }
+            static WaveForm &triangle() { return _triangle; }
+            static WaveForm &noise() { return _noise; }
+        };
 
-#ifdef STATIC_WAVEFORM_NOISE
-        StaticWaveForm<WAVEFORM_BIT_LENGTH> Noise(NoiseWaveForm<WAVEFORM_BIT_LENGTH>());
-#endif // STATIC_WAVEFORM_NOISE
-#endif // defined(WAVEFORM_BIT_LENGTH)
     }
 }

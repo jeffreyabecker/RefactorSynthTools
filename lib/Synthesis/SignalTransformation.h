@@ -46,7 +46,7 @@
 
 namespace Synthesis
 {
-    template <size_t BufferLength>
+    template <size_t BufferLength = 48>
     class SignalTransformation
     {
     public:
@@ -58,4 +58,28 @@ namespace Synthesis
         virtual void reset() = 0;
     };
 
+    template <size_t BufferLength = 48>
+    class StereoSignalTransformation
+    {
+    protected:
+        SignalTransformation &_left;
+        SignalTransformation &_right;
+
+    public:
+        StereoSignalTransformation(SignalTransformation &left, SignalTransformation &right) : _left(left), _right(right) {}
+        void processInplace(StereoSampleBuffer &signal)
+        {
+            process(signal, signal);
+        }
+        void process(const StereoSampleBuffer &inputSignal, StereoSampleBuffer &outputSignal)
+        {
+            _left.process(inputSignal.left(), outputSignal.left());
+            _right.process(inputSignal.right(), outputSignal.right());
+        }
+        void reset()
+        {
+            _left.reset();
+            _right.reset();
+        }
+    };
 }

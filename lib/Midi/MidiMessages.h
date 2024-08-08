@@ -8,6 +8,9 @@
 namespace Midi
 {
 
+  namespace Constants{
+    const uint8_t MaxChannels = 16;
+  }
   // https://midi.org/summary-of-midi-1-0-messages
   enum class MidiMessageStatus : uint8_t
   {
@@ -74,6 +77,7 @@ namespace Midi
     class MidiChannelMessage : public MidiMessage
     {
     public:
+
       MidiChannelMessage(const MidiChannelMessage &that) : MidiMessage(that) {}
       inline uint8_t channel() { return (uint8_t)(_status) & 0x0F; }
 

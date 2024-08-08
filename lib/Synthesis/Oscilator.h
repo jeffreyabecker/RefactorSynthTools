@@ -47,136 +47,110 @@
 
 namespace Synthesis
 {
-    template <size_t BufferLength>
+
+    class OscilatorConfig
+    {
+    protected:
+        float _pitch;
+        uint8_t _pitchOctave; /* multiplier to go to higher octaves */
+        float _pitchMultiplier;
+        float _volume;
+        float _morph;
+        WaveForms::WaveForm &_morphWaveForm;
+        WaveForms::WaveForm &_oscilatorWaveForm;
+
+    public:
+        OscilatorConfig() : _pitch(1.0f),
+                            _pitchOctave(1),
+                            _pitchMultiplier(1.0f),
+                            _volume(0.0),
+                            _morph(0),
+                            _morphWaveForm(WaveForms::All::sine()),
+                            _oscilatorWaveForm(WaveForms::All::sawTooth()),
+        {
+        }
+        float calculateSamplePitch()
+        {
+            return ((_pitchMultiplier)*_pitchOctave * _pitch);
+        }
+        inline void setPitchOctave(uint8_t value) { _pitchOctave = value; }
+        inline uint8_t getPitchOctave() { return _pitchOctave; }
+        inline void setPitchMultiplier(float value) { _pitchMultiplier = value; }
+        inline float getPitchMultiplier() { return _pitchMultiplier; }
+        inline void setVolume(float value) { _volume = value; }
+        inline float getVolume() { return _volume; }
+        inline void setPitch(float value) { _pitch = value; }
+        inline float getPitch() { return _pitch; }
+
+        inline void setMorph(float value) { _morph = value; }
+        inline float getMorph() { return _morph; }
+        inline void setMorphWaveForm(WaveForms::WaveForm &value) {_morphWaveForm = value); }
+        inline WaveForms::WaveForm &getMorphWaveForm() { return _morphWaveForm; }
+        inline void setOscilatorWaveForm(WaveForms::WaveForm &value) {_oscilatorWaveForm = value); }
+        inline WaveForms::WaveForm &getOscilatorWaveForm() { return _oscilatorWaveForm; }
+
+        inline float morphWaveFormAt(size_t offset)
+        {
+            return _morphWaveForm->at(offset);
+        }
+        inline float waveFormAt(size_t offset)
+        {
+            return _oscilatorWaveForm->at(offset);
+        }
+    };
+
+    template <size_t BufferLength, uint8_t Voices>
     class Oscilator : SignalTransformation
     {
     protected:
-        WaveForms::WaveForm &_morphWaveForm;
-        WaveForms::WaveForm &_oscilatorWaveForm;
-        uint8_t _oscilators;
         uint32_t _samplePos;
         uint32_t _addVal;
         float _pan;
         bool _panEnabled;
-        uint8_t _pitchOctave; /* multiplier to go to higher octaves */
-        float _pitchMultiplier;
-        float _volume;
-        float _pitch;
         float _pitchMod;
-        float _morph;
-
-        inline void OscProcessSingle(SampleBuffer &inputSignal, SampleBuffer &outputSignal)
-        {
-
-            for (size_t n = 0U; n < BufferLength; n++)
-            {
-                _samplePos += (uint32_t)((_pitchMultiplier) * ((float)_addVal) * _pitchOctave * _pitch * _pitchMod);
-                uint32_t samplePos = _samplePos;
-                float morphMod = _morphWaveForm.at(_samplePos);
-                morphMod *= ((float)89478480);
-                morphMod *= (_morph) * 64;
-                _samplePos += morphMod;
-
-                float sig = _oscilatorWaveForm.at(_samplePos);
-
-                sig *= _volume;
-                outputSignal[n] += sig * (_panEnabled ? _pan : 1.0f);
-            }
-        }
+        OscilatorConfig _config;
 
     public:
-        Oscilator(
-            WaveForms::WaveForm &morphWaveForm,
-            WaveForms::WaveForm &oscilatorWaveForm,
-            uint8_t voices) : _morphWaveForm(morphWaveForm),
-                              _oscilatorWaveForm(oscilatorWaveForm),
-                              _oscilators(voices * 3),
-                              _samplePos(0)
+        Oscilator() : _samplePos(0),
+                      _pan(0),
+                      _panEnabled(false),
+                      _config(),
+                      _pitchMod(1)
 
         {
         }
 
         virtual void process(const SampleBuffer &inputSignal, SampleBuffer &outputSignal) override
         {
-
-            for (int i = 0; i < _oscilators; i++)
+            for (int i = 0; i < Voices; i++)
             {
-                OscProcessSingle(inputSignal, outputSignal);
+                for (size_t j = 0U; j < BufferLength; j++)
+                {
+                    _samplePos += (uint32_t)(_config.calculateSamplePitch() * (float)_addVal * _pitchMod);
+
+                    float morphMod = _config.morphWaveFormAt((uint32_t)_samplePos);
+                    morphMod *= ((float)89478480);
+                    morphMod *= (_config.getMorph()) * 64;
+                    _samplePos += morphMod;
+
+                    float sig = _config.waveFormAt(_samplePos);
+
+                    sig *= _config.getVolume();
+                    outputSignal[j] += sig * (_panEnabled ? _pan : 1.0f);
+                }
             }
         }
         virtual void reset() override {}
 
-        uint32_t getAddVal() { return _addVal; }
-        uint32_t setAddVal(uint32_t newValue)
-        {
-            uint32_t oldValue = _addVal;
-            _addVal = newValue;
-            return oldValue;
-        }
-
-        float getPan() { return _pan; }
-        float setPan(float newValue)
-        {
-            float oldValue = _pan;
-            _pan = newValue;
-            return oldValue;
-        }
-
-        bool getPanEnabled() { return _panEnabled; }
-        bool setPanEnabled(bool newValue)
-        {
-            bool oldValue = _panEnabled;
-            _panEnabled = newValue;
-            return oldValue;
-        }
-
-        uint8_t getPitchOctave() { return _pitchOctave; }
-        uint8_t setPitchOctave(uint8_t newValue)
-        {
-            uint8_t oldValue = _pitchOctave;
-            _pitchOctave = newValue;
-            return oldValue;
-        }
-
-        float getPitchMultiplier() { return _pitchMultiplier; }
-        float setPitchMultiplier(float newValue)
-        {
-            float oldValue = _pitchMultiplier;
-            _pitchMultiplier = newValue;
-            return oldValue;
-        }
-
-        float getVolume() { return _volume; }
-        float setVolume(float newValue)
-        {
-            float oldValue = _volume;
-            _volume = newValue;
-            return oldValue;
-        }
-
-        float getPitch() { return _pitch; }
-        float setPitch(float newValue)
-        {
-            float oldValue = _pitch;
-            _pitch = newValue;
-            return oldValue;
-        }
-
-        float getPitchMod() { return _pitchMod; }
-        float setPitchMod(float newValue)
-        {
-            float oldValue = _pitchMod;
-            _pitchMod = newValue;
-            return oldValue;
-        }
-
-        float getMorph() { return _morph; }
-        float setMorph(float newValue)
-        {
-            float oldValue = _morph;
-            _morph = newValue;
-            return oldValue;
-        }
+        inline void setSamplePos(uint32_t value) { _samplePos = value; }
+        inline uint32_t getSamplePos() { return _samplePos; }
+        inline void setAddVal(uint32_t value) { _addVal = value; }
+        inline uint32_t getAddVal() { return _addVal; }
+        inline void setPan(float value) { _pan = value; }
+        inline float getPan() { return _pan; }
+        inline void setPanEnabled(bool value) { _panEnabled = value; }
+        inline bool getPanEnabled() { return _panEnabled; }
+        inline OscilatorConfig &getConfig() { return _config; }
     };
 
 }
